@@ -170,3 +170,20 @@ dialog::backdrop{background:#0f2a3a88;backdrop-filter:blur(3px)}
 #answerConnections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 24px;padding-left:24px;color:var(--muted);font-size:14px}
 @media(max-width:600px){#answerConnections{grid-template-columns:1fr}.answer-heading h2{font-size:16px}#answerDialog{padding:12px}}
 .board-help[hidden]{display:none}
+
+/* Direct rotation and continuous wire gestures share mouse, touch and stylus input. */
+#rotate{min-height:40px}
+.part-rotate{cursor:pointer}
+.part-rotate rect{fill:var(--teal);stroke:white;stroke-width:2}
+.part-rotate text{fill:white;font-size:12px;font-weight:700;pointer-events:none}
+.part-rotate:focus rect{stroke:var(--orange);stroke-width:3}
+.wire-handle{cursor:grab}
+.wire-grip{fill:white;stroke:var(--orange);stroke-width:3}
+.wire-grip-mark{fill:none;stroke:var(--orange);stroke-width:2;pointer-events:none}
+.wire-preview{fill:none;stroke:var(--orange);stroke-width:3;stroke-dasharray:8 5;stroke-linejoin:round}
+.wire-snap{fill:none;stroke:var(--teal);stroke-width:3}
+/* Mission-only navigation stays compact; Back remains available on every task. */
+#modes{flex:0 0 auto;max-width:none}
+#modes button{min-height:40px;padding-inline:25px}
+#missionBack,#missionNext{min-height:40px}
+@media(max-width:1100px){#modes{order:initial;flex-basis:auto;margin-left:auto;margin-right:0}}

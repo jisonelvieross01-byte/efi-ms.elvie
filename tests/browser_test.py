@@ -41,7 +41,7 @@ with sync_playwright() as p:
   if name=='meters':assert page.evaluate('Math.abs(result.readings[state.components.find(c=>c.type==="voltmeter").id].voltage-6)<1e-7')
  # Mission validation must require the correct circuit.
  page.locator('[data-mode="missions"]').click();page.select_option('#examples','single');assert 'verified' in page.locator('#missionStatus').inner_text()
- page.locator('#activity button').click();assert 'verified' not in page.locator('#missionStatus').inner_text()
+ page.locator('#missionNext').click();assert 'verified' not in page.locator('#missionStatus').inner_text()
  page.evaluate("load('series');mission=4;activity()");assert 'verified' in page.locator('#missionStatus').inner_text()
  page.evaluate("load('parallel');mission=5;activity()");assert 'verified' in page.locator('#missionStatus').inner_text()
  page.evaluate("load('meters');mission=2;activity()");assert 'verified' in page.locator('#missionStatus').inner_text()
@@ -64,24 +64,19 @@ with sync_playwright() as p:
  page.locator('#timerPause').click();assert page.evaluate('!timerOn && !running')
  page.locator('#reveal').click();assert page.locator('#explanation').is_visible()
  page.locator('#closeAnswer').click()
- # Detective faults are genuine faults, not cosmetic.
- page.locator('[data-mode="detective"]').click();assert page.evaluate('!result.active')
- page.locator('#activity button').last.click();assert page.evaluate('result.short')
- page.locator('#activity button').last.click();assert page.evaluate('result.ok && !result.active')
- # Classroom scores/names persist and recover after reload.
- page.locator('[data-mode="challenge"]').click();page.locator('.scoreboard input').first.fill('Ada & Noor');page.locator('.scoreboard input').first.press('Tab')
- page.locator('.scoreboard button').first.click();assert page.evaluate('classroom.scores[0]')==10
- page.reload();assert page.evaluate('classroom.names[0]')=='Ada & Noor';assert page.evaluate('classroom.scores[0]')==10
- page.locator('[data-mode="explorer"]').click();page.locator('#parts button').first.click();assert page.locator('#symbolDialog').is_visible();page.locator('#closeDialog').click()
- page.evaluate("[...document.querySelectorAll('#quizChoices button')].find(b=>b.textContent===PARTS[quizType].name).click()")
- assert 'Correct' in page.locator('#quizAnswer').inner_text()
+ # Mission-only navigation and local board/progress persistence.
+ assert page.locator('#modes button').count()==1
+ assert page.locator('#modes button').inner_text()=='Mission'
+ before=page.evaluate('JSON.stringify(state)');page.reload()
+ assert page.evaluate('JSON.stringify(state)')==before
+ assert page.evaluate('mode')=='missions'
  # Offline mode: no requests needed after opening a local file.
  page.reload();assert page.locator('#parts button').count()==17
- page.locator('[data-mode="build"]').click();page.select_option('#examples','meters')
+ page.select_option('#examples','meters')
  page.screenshot(path='/tmp/circuitlab-desktop.png',full_page=True)
  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
  page.set_viewport_size({'width':960,'height':600});page.screenshot(path='/tmp/circuitlab-small.png',full_page=True)
  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
  assert not errors,errors
  browser.close()
- print('PASS: offline load, touch wiring, drag, rotate, delete, undo/redo, 5 examples, missions, sliders, switches, teacher timer, detective faults, scoreboard, persistence, quiz, 2 layouts; no JavaScript errors.')
+ print('PASS: offline load, touch wiring, drag, rotate, delete, undo/redo, 5 examples, missions, sliders, switches, teacher timer, mission-only navigation, persistence, 2 layouts; no JavaScript errors.')

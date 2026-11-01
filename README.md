@@ -63,7 +63,7 @@ Browser tests need Python Playwright and system Chromium (`/usr/bin/chromium`).
 These are development dependencies only. They start their own temporary local
 servers. Static checks ensure all HTML links resolve and downloads are bundled.
 Numerical tests exercise 17 circuit cases; integration tests cover touchscreen
-controls, all ten mission validators, the catalog, imports, downloads and layouts.
+controls, all twenty mission validators, the catalog, imports, downloads and layouts.
 
 ## Storage and privacy
 

@@ -14,13 +14,13 @@ with sync_playwright() as p:
  page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.goto(f'http://127.0.0.1:{server.server_port}/tools/circuitlab/index.html')
  page.locator('[data-mode="missions"]').click()
- # All ten solutions pass the actual mission checks, without marking progress.
- for i in range(10):
+ # All twenty solutions pass the actual mission checks, without marking progress.
+ for i in range(20):
   assert page.evaluate('''i=>{const oldState=state,oldResult=result;try{state=solutionCircuit(i);result=CircuitSolver.solve(state);return result.ok&&result.active&&checkMission(i);}finally{state=oldState;result=oldResult;}}''',i),i
- for i in range(10):
+ for i in range(20):
   page.evaluate('(i)=>{mission=i;activity()}',i)
   before=page.evaluate('JSON.stringify({state,serial,history,future,classroom,saved:localStorage.getItem("circuitlab-v1")})')
-  assert page.locator('#activity button').count()==1
+  assert page.locator('#activity button').count()==2
   page.locator('#hint').tap()
   assert page.locator('#hintLayer [data-guide-part]').count()>=2
   assert page.locator('#hintLayer .guide-wire').count()==1
@@ -34,19 +34,18 @@ with sync_playwright() as p:
   page.locator('#closeAnswer').tap()
   assert page.evaluate('JSON.stringify({state,serial,history,future,classroom,saved:localStorage.getItem("circuitlab-v1")})')==before
   assert 'verified' not in page.locator('#missionStatus').inner_text()
-  page.locator('#activity button').click();assert page.locator('#hintLayer [data-guide-part]').count()==0
+  assert page.locator('#missionNext').is_disabled()
+  page.evaluate('state=solutionCircuit(mission);running=true;changed()')
+  assert page.locator('#missionNext').is_enabled()
+  page.locator('#missionNext').click();assert page.locator('#hintLayer [data-guide-part]').count()==0
+  assert page.evaluate('state.components.length===0 && state.wires.length===0')
  # Hint survives edits but does not block wiring/selecting; modes clear it.
  page.locator('#hint').tap();page.evaluate("addAt('lamp',{x:650,y:180})")
  assert page.locator('#hintLayer [data-guide-part]').count()>0
  assert page.locator('#components [data-part]').count()==1
- page.locator('[data-mode="explorer"]').click();assert page.locator('#boardHelp').is_hidden()
+ page.evaluate('mission=1;activity()');page.locator('#missionBack').click()
  assert page.locator('#hintLayer [data-guide-part]').count()==0
- for case in range(3):
-  page.evaluate("i=>{mode='detective';detective=i;load(detectives[i][3]);activity()}",case)
-  assert page.locator('#activity button').last.inner_text().startswith('Next case')
-  page.locator('#showAnswer').click();assert page.locator('#answerDialog').is_visible()
-  assert page.evaluate('CircuitSolver.solve(solutionCircuit(guideMission())).active')
-  page.locator('#closeAnswer').click()
+ assert page.locator('#missionBack').is_enabled()
  page.locator('#teacher').click();page.locator('#reveal').click()
  assert page.locator('#answerDialog').is_visible();assert page.locator('#explanation').is_visible()
  page.locator('#closeAnswer').click()
@@ -58,4 +57,4 @@ with sync_playwright() as p:
  assert not errors,errors
  browser.close()
 server.shutdown()
-print('PASS: all ten answer circuits validate; partial hints/full labelled diagrams; no state, history, score or save changes; resets, 3 detective cases, teacher reveal and 375/960/1920 layouts.')
+print('PASS: all twenty answer circuits validate; partial hints/full labelled diagrams; no state, history, score or save changes; task resets, teacher reveal and 375/960/1920 layouts.')
