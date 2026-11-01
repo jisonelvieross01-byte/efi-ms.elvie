@@ -76,3 +76,7 @@ library origin and restrict external resource loading; only import trusted files
 
 CircuitLab uses an explicitly labelled DC steady-state model. See the in-app
 model panel and `tools/circuitlab/README.md` for its scientific limitations.
+
+CircuitLab includes a locally bundled CC0 full-body 3D robot dance with a five-second
+viewing gate and no PIN. The build versions CSS/JS by content hash. See
+`tools/circuitlab/vendor/ASSETS.md` for asset provenance and optional renderer rebuild steps.

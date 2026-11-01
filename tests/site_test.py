@@ -2,7 +2,8 @@
 from pathlib import Path
 from html.parser import HTMLParser
 from urllib.parse import urlsplit,unquote
-import re
+import re,hashlib
+from urllib.parse import parse_qs
 ROOT=Path(__file__).resolve().parents[1]/'dist'
 class Links(HTMLParser):
  def __init__(self):super().__init__();self.links=[]
@@ -19,6 +20,8 @@ for file in ROOT.rglob('*.html'):
   target=(file.parent/unquote(url.path)).resolve()
   assert target.is_relative_to(ROOT.resolve()),(file,link,'escapes build')
   assert target.exists(),(file,link,'broken link')
+  if target.suffix in ['.css','.js']:
+   assert parse_qs(url.query).get('v')==[hashlib.sha256(target.read_bytes()).hexdigest()[:12]],(file,link,'stale asset version')
  count+=1
 for path in ['site-assets/site.js','site-assets/site.css','site-assets/catalog.js','downloads/circuitlab.html','downloads/circuitlab.zip','.nojekyll']:
  assert (ROOT/path).is_file(),path

@@ -45,10 +45,10 @@ function refreshMissionClock(){
  $('#missionStartOverlay').hidden=!locked;
  $('#missionStart').textContent=missionPhase==='expired'?'Retry move':missionPhase==='paused'?'Resume':'Start';
  $('#missionStartTitle').textContent=missionPhase==='expired'?'Time’s up':missionPhase==='paused'?'Paused':'Ready?';
- $('#missionStartNote').textContent=missionPhase==='expired'?'Copy your move; ask your teacher to approve.':'1 minute 30 seconds for this mission.';
- $('#run').disabled=missionPhase==='ready'||missionPhase==='expired';
+ $('#missionStartNote').textContent=missionPhase==='expired'?'Copy your saved dance to try again.':'1 minute 30 seconds for this mission.';
+ $('#run').disabled=missionPhase==='expired';
  $('#missionClock').textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');
- $('#missionClock').classList.toggle('time-low',remaining<=15&&missionPhase==='running');
+ $('#missionClock').classList.toggle('time-low',remaining<=15&&missionPhase==='running');$('#missionTimeBar').value=remaining;$('#missionClockCard').dataset.phase=missionPhase;$('#missionClockState').textContent=({ready:'Press Start or Run',running:'Counting down',paused:'Teacher pause',complete:'Verified',expired:'Time’s up'})[missionPhase];
  $('#missionClock').setAttribute('aria-label',remaining+' seconds remaining');
 }
 function beginMission(){
@@ -227,7 +227,7 @@ $('#rotate').onclick=rotate;$('#delete').onclick=remove;$('#clear').onclick=()=>
 $('#undo').onclick=()=>{if(history.length){future.push(JSON.stringify(state));state=JSON.parse(history.pop());selected=armed=null;changed();}};
 $('#redo').onclick=()=>{if(future.length){history.push(JSON.stringify(state));state=JSON.parse(future.pop());selected=armed=null;changed();}};
 $('#selectTool').onclick=()=>{tool='select';placing=null;armed=null;renderBoard();};$('#wireTool').onclick=()=>{tool='wire';placing=null;renderBoard();notify('Drag from one dot to another');};
-$('#run').onclick=()=>{if(missionPhase==='paused'){beginMission();return;}if(missionPhase!=='running'&&missionPhase!=='complete')return;running=true;changed();};$('#pause').onclick=()=>{running=false;changed();};
+$('#run').onclick=()=>{if(missionPhase==='ready'||missionPhase==='paused'){beginMission();return;}if(missionPhase!=='running'&&missionPhase!=='complete')return;running=true;changed();};$('#pause').onclick=()=>{running=false;changed();};
 document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='Escape'){cancelWireGesture();if(drag){state=JSON.parse(drag.snapshot);drag=null;}placing=armed=null;renderBoard();}if((e.key==='Enter'||e.key===' ')&&e.target.closest('[data-rotate-part]')){e.preventDefault();selected=e.target.closest('[data-rotate-part]').dataset.rotatePart;rotate();}if(e.key.toLowerCase()==='r')rotate();if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();remove();}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();$(e.shiftKey?'#redo':'#undo').click();}});
 // Templates are real editable networks, not illustrative diagrams.
 function makeExample(name){const C=[],W=[];const add=(type,x,y,v)=>{const c=part(type,x,y,v);C.push(c);return c;};const link=(a,t,b,u)=>W.push({id:'w'+(++serial),a:a.id+':'+t,b:b.id+':'+u});
@@ -284,80 +284,58 @@ function renderGuide(){
  $('#hintLayer').replaceChildren();$('#hintLabel').hidden=!guideVisible;$('#empty').hidden=!!state.components.length||guideVisible;
  if(guideVisible&&enabled)drawGuide($('#hintLayer'),solutionCircuit(guideMission()));
 }
-// A local classroom gate: the teacher observes the student and approves with a PIN.
-// No camera or movement detection; PIN verification never marks a circuit complete.
+// One licensed full-body 3D clip, with seven saved tempo variants; no PIN or camera.
 const DANCE_MOVES=[
- {name:'Robot elbows',hint:'Move your elbows like a robot.',css:'robot'},
- {name:'Penguin wobble',hint:'Keep your elbows in and wobble gently.',css:'penguin'},
- {name:'Jelly arms',hint:'Let your arms wiggle like jelly.',css:'jelly'},
- {name:'Disco pointer',hint:'Point up, then across, like a disco star.',css:'disco'},
- {name:'Chicken wings',hint:'Flap your elbows like tiny wings.',css:'chicken'},
- {name:'Window wipers',hint:'Sweep your hands from side to side.',css:'wipers'},
- {name:'Alien hello',hint:'Tilt your head and give a tiny wave.',css:'alien'}
+ {name:'Robot boogie',hint:'Copy the robot’s full-body groove.'},
+ {name:'Disco bot',hint:'Copy the steps and sway with the robot.'},
+ {name:'Slow groove',hint:'Follow the robot’s slow, funny dance.'},
+ {name:'Speedy shuffle',hint:'Copy the robot’s quick little steps.'},
+ {name:'Side-to-side',hint:'Sway and step with the robot.'},
+ {name:'Turnaround groove',hint:'Copy the robot’s turns and steps.'},
+ {name:'Bouncy bot',hint:'Follow the robot’s bouncy groove.'}
 ];
-const DANCE_PIN_KEY='circuitlab-teacher-pin-v1';
-let sessionTeacherPin=null,danceRequest=null,danceTicker=null,danceAssignments=[];
+let danceRequest=null,danceTicker=null,danceAssignments=[];
 try{const saved=JSON.parse(localStorage.getItem('circuitlab-dance-moves-v1'));if(Array.isArray(saved)&&saved.length===missions.length&&saved.every(i=>Number.isInteger(i)&&i>=0&&i<DANCE_MOVES.length))danceAssignments=saved;}catch{}
 if(!danceAssignments.length){let last=-1;while(danceAssignments.length<missions.length){const bag=DANCE_MOVES.map((_,i)=>i);for(let i=bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bag[i],bag[j]]=[bag[j],bag[i]];}if(bag[0]===last)[bag[0],bag[1]]=[bag[1],bag[0]];danceAssignments.push(...bag);last=bag.at(-1);}danceAssignments.length=missions.length;try{localStorage.setItem('circuitlab-dance-moves-v1',JSON.stringify(danceAssignments));}catch{}}
-function teacherPin(){
- if(sessionTeacherPin)return sessionTeacherPin;
- try{const p=JSON.parse(localStorage.getItem(DANCE_PIN_KEY));if(p&&/^[a-f0-9]{32}$/.test(p.salt)&&/^[a-f0-9]{64}$/.test(p.hash))return p;}catch{}
- return null;
-}
-async function pinDigest(pin,salt){const bytes=new TextEncoder().encode(salt+':'+pin);const digest=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(digest),v=>v.toString(16).padStart(2,'0')).join('');}
-function refreshPinLabel(){$('#teacherPinSetup').textContent=teacherPin()?'Change PIN':'Set PIN';}
-function cancelDance(){clearInterval(danceTicker);danceTicker=null;danceRequest=null;$('#approvalPin').value='';$('#danceDialog').close();}
+function cancelDance(){clearInterval(danceTicker);danceTicker=null;danceRequest=null;if(window.CircuitDance)CircuitDance.stop();$('#danceDialog').close();}
 function danceTick(){
  const request=danceRequest;if(!request)return;
- const seconds=Math.max(0,Math.ceil((3000-(performance.now()-request.started))/1000));
- $('#danceCountdown').textContent=seconds?seconds+' s':'Ready';
- $('#danceStatus').textContent=seconds?'Copy the move.':teacherPin()?'Teacher: check the move and enter your PIN.':'Ask your teacher to set a PIN in Teacher tools.';
- $('#approveDance').disabled=seconds>0||!teacherPin()||request.busy;
- $('#approvalPin').disabled=seconds>0||!teacherPin()||request.busy;
- $('#danceFigure').classList.toggle('dance-finished',seconds===0);
+ const seconds=request.started===null?5:Math.max(0,Math.ceil((5000-(performance.now()-request.started))/1000));
+ $('#danceCountdown').textContent=request.started===null?'Loading…':seconds?seconds+' s':'Ready';
+ $('#danceStatus').textContent=request.started===null?'Preparing your 3D dance.':seconds?'Copy the dance.':request.purpose==='retry'?'Ready for another try.':'Ready to see the circuit.';
+ $('#continueDance').disabled=request.started===null||seconds>0;
 }
 function showAnswer(){showDance(missionPhase==='expired'?'retry':'answer');}
-function showDance(purpose='answer'){
+async function showDance(purpose='answer',forceMotion=false){
  if($('#answerDialog').open)$('#answerDialog').close();
  cancelDance();$('#explanation').hidden=true;$('#answerDrawing').replaceChildren();$('#answerConnections').replaceChildren();
  const moveIndex=danceAssignments[mission],move=DANCE_MOVES[moveIndex];
- danceRequest={key:helpKey(),started:performance.now(),moveIndex,busy:false,purpose};
- $('#danceTitle').textContent=move.name;$('#danceKicker').textContent=purpose==='retry'?'TIME’S UP · RETRY MOVE':'MOVE TO REVEAL';$('#danceInstruction').textContent=move.hint;
- $('#danceFigure').setAttribute('class','dance-figure move-'+move.css);$('#danceFigure').dataset.move=move.css;
- $('#adaptedMove').setAttribute('aria-pressed','false');$('#adaptedMove').textContent='Seated option';$('#danceAlternative').hidden=true;
- $('#approvalPin').value='';$('#danceError').textContent='';$('#danceDialog').showModal();danceTick();danceTicker=setInterval(danceTick,100);
+ const request={key:helpKey(),started:null,moveIndex,purpose};danceRequest=request;
+ $('#danceTitle').textContent=move.name;$('#danceKicker').textContent=purpose==='retry'?'TIME’S UP · RETRY DANCE':'DANCE TO REVEAL';$('#danceInstruction').textContent=move.hint;
+ const stage=$('#danceFigure');stage.className='dance-figure';stage.dataset.move=String(moveIndex);stage.dataset.renderer='loading';
+ $('#robotFallback').hidden=true;$('#danceLoading').hidden=false;$('#danceRenderNote').hidden=true;
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches&&!forceMotion;
+ $('#danceMotionNote').hidden=!reduced;$('#replayDance').textContent=reduced?'Play dance':'Replay';
+ $('#adaptedMove').setAttribute('aria-pressed','false');$('#danceAlternative').hidden=true;
+ $('#continueDance').textContent=purpose==='retry'?'Try again':'See answer';$('#danceDialog').showModal();danceTick();
+ let ready=false;
+ try{if(window.CircuitDance)ready=await CircuitDance.play(stage,moveIndex,forceMotion);}catch{/* Provide an animated, locally drawn toy robot on devices without WebGL. */}
+ if(danceRequest!==request)return;
+ $('#danceLoading').hidden=true;
+ if(!ready){stage.dataset.renderer='css';stage.dataset.motion=reduced?'still':'playing';stage.classList.toggle('dance-play',forceMotion);$('#robotFallback').hidden=false;$('#danceRenderNote').hidden=false;}
+ request.started=performance.now();danceTick();danceTicker=setInterval(danceTick,100);
 }
 $('#cancelDance').onclick=cancelDance;$('#danceDialog').addEventListener('cancel',cancelDance);
-$('#adaptedMove').onclick=()=>{const active=$('#adaptedMove').getAttribute('aria-pressed')!=='true';$('#adaptedMove').setAttribute('aria-pressed',active);$('#danceFigure').classList.toggle('dance-seated',active);$('#danceAlternative').hidden=!active;};
-$('#danceApproval').onsubmit=async ev=>{
- ev.preventDefault();const request=danceRequest,pin=teacherPin();
- if(!request||request.busy||request.key!==helpKey()||performance.now()-request.started<3000||!pin)return;
- request.busy=true;danceTick();$('#danceError').textContent='';
- try{
-  const valid=await pinDigest($('#approvalPin').value,pin.salt)===pin.hash;
-  if(danceRequest!==request||request.key!==helpKey())return;
-  $('#approvalPin').value='';
-  if(!valid){$('#danceError').textContent='Incorrect PIN. Ask your teacher.';return;}
-  const purpose=request.purpose;cancelDance();if(purpose==='retry'){retryMission();return;}if(missionPhase==='expired')return;$('#explanation').hidden=false;$('#explanation').textContent=missions[mission][2];revealAnswer();
- }catch{if(danceRequest===request)$('#danceError').textContent='PIN check unavailable in this browser.';}
- finally{if(danceRequest===request){request.busy=false;danceTick();}}
+$('#replayDance').onclick=()=>{if(danceRequest)showDance(danceRequest.purpose,true);};
+$('#adaptedMove').onclick=()=>{const active=$('#adaptedMove').getAttribute('aria-pressed')!=='true';$('#adaptedMove').setAttribute('aria-pressed',active);$('#danceAlternative').hidden=!active;};
+$('#continueDance').onclick=()=>{
+ const request=danceRequest;
+ if(!request||request.key!==helpKey()||request.started===null||performance.now()-request.started<5000)return;
+ const purpose=request.purpose;cancelDance();
+ if(purpose==='retry'){retryMission();return;}
+ if(missionPhase==='expired')return;
+ $('#explanation').hidden=false;$('#explanation').textContent=missions[mission][2];revealAnswer();
 };
-$('#teacherPinSetup').onclick=()=>{$('#oldPinRow').hidden=!teacherPin();$('#oldTeacherPin').value='';$('#newTeacherPin').value='';$('#confirmTeacherPin').value='';$('#pinSetupStatus').textContent='';$('#teacherPinDialog').showModal();};
-$('#closePinSetup').onclick=()=>$('#teacherPinDialog').close();
-$('#teacherPinForm').onsubmit=async ev=>{
- ev.preventDefault();const existing=teacherPin(),value=$('#newTeacherPin').value;
- if(!/^\d{4,8}$/.test(value)||value!==$('#confirmTeacherPin').value){$('#pinSetupStatus').textContent='Use matching PINs of 4–8 digits.';return;}
- $('#saveTeacherPin').disabled=true;
- try{
-  if(existing&&await pinDigest($('#oldTeacherPin').value,existing.salt)!==existing.hash){$('#pinSetupStatus').textContent='Current PIN is incorrect.';return;}
-  const salt=Array.from(crypto.getRandomValues(new Uint8Array(16)),v=>v.toString(16).padStart(2,'0')).join('');
-  const record={salt,hash:await pinDigest(value,salt)};let saved=true;sessionTeacherPin=record;
-  try{localStorage.setItem(DANCE_PIN_KEY,JSON.stringify(record));}catch{saved=false;}
-  $('#oldTeacherPin').value=$('#newTeacherPin').value=$('#confirmTeacherPin').value='';$('#teacherPinDialog').close();refreshPinLabel();notify(saved?'Teacher PIN saved':'PIN set for this session');
- }catch{$('#pinSetupStatus').textContent='PIN setup needs a secure, current browser.';}
- finally{$('#saveTeacherPin').disabled=false;}
-};
-refreshPinLabel();
 
 function revealAnswer(){
  const index=guideMission(),network=solutionCircuit(index),calculated=CircuitSolver.solve(network);
@@ -422,7 +400,7 @@ function validate(){const status=$('#missionStatus');if(!status){$('#nextMission
  status.textContent=passed?'✓ Circuit verified!':'Build it, then press Run.';status.className=passed?'success':'pending';}
 $('#teacher').onclick=()=>{const panel=$('#teacherPanel');panel.hidden=!panel.hidden;$('#teacher').setAttribute('aria-pressed',!panel.hidden);};
 function renderTimer(){$('#timer').textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');refreshMissionClock();}
-$('#timerStart').onclick=beginMission;$('#timerPause').onclick=pauseMission;$('#timerReset').onclick=()=>{if(missionPhase==='expired'){showDance('retry');return;}resetAttempt();changed();renderTimer();};$('#nextMission').onclick=nextMission;$('#previousMission').onclick=backMission;$('#reveal').onclick=showAnswer;
+$('#timerPause').onclick=pauseMission;$('#timerReset').onclick=()=>{if(missionPhase==='expired'){showDance('retry');return;}resetAttempt();changed();renderTimer();};$('#nextMission').onclick=nextMission;$('#previousMission').onclick=backMission;$('#reveal').onclick=showAnswer;
 
 $('#sound').onclick=()=>{sound=!sound;$('#sound').textContent=sound?'🔊':'🔇';$('#sound').setAttribute('aria-label',sound?'Sound on':'Sound off');$('#sound').setAttribute('aria-pressed',sound);beep();};$('#fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{notify('Fullscreen is unavailable in this browser.');}};
 // Wire flow uses KCL at each terminal, distributing cycles without inventing meter readings.

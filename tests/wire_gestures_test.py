@@ -8,7 +8,7 @@ ROOT=Path(__file__).resolve().parents[1]
 server=ThreadingHTTPServer(('127.0.0.1',0),partial(SimpleHTTPRequestHandler,directory=str(ROOT)))
 Thread(target=server.serve_forever,daemon=True).start()
 with sync_playwright() as p:
- browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
+ browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader'])
  context=browser.new_context(viewport={'width':1920,'height':1080},has_touch=True)
  context.route('**/*',lambda r:r.continue_() if r.request.url.startswith('http://127.0.0.1:') else r.abort())
  page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
@@ -52,6 +52,7 @@ with sync_playwright() as p:
  long_length=page.evaluate('(()=>{const p=wirePoints(state.wires[0]);return p.slice(1).reduce((s,b,i)=>s+Math.hypot(b.x-p[i].x,b.y-p[i].y),0)})()')
  # Touch stretch returns it toward a shorter route; no extra wires/components appear.
  page.evaluate('id=>{selected=id;renderBoard();renderInspector()}',wire)
+ page.locator('[data-wire-handle="bend"]').scroll_into_view_if_needed()
  midpoint=page.evaluate('wireMidpoint(state.wires[0])')
  touch_drag(midpoint,{'x':440,'y':300})
  short_length=page.evaluate('(()=>{const p=wirePoints(state.wires[0]);return p.slice(1).reduce((s,b,i)=>s+Math.hypot(b.x-p[i].x,b.y-p[i].y),0)})()')

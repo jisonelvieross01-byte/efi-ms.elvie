@@ -1,0 +1,3 @@
+# Generated Three.js bundles contain preserved upstream GLSL string whitespace.
+tools/circuitlab/vendor/dance-scene.js -whitespace
+public-downloads/CircuitLab.html -whitespace

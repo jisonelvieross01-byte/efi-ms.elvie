@@ -4,6 +4,11 @@
   "private": true,
   "scripts": {
     "test": "node tests/solver.test.js",
-    "serve": "python3 -m http.server 8000"
+    "serve": "python3 -m http.server 8000",
+    "build:dance": "esbuild tools/circuitlab/src/dance-scene.js --bundle --format=iife --global-name=CircuitDance --minify --loader:.glb=dataurl --legal-comments=eof --outfile=tools/circuitlab/vendor/dance-scene.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "three": "0.170.0"
   }
 }

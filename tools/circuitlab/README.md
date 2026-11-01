@@ -176,33 +176,40 @@ transitions, progress retention and migration of old saves to mission-only navig
 Missions 21–24 add unequal series voltage sharing, unequal parallel branch currents,
 a switched LED and a final two-meter measurement check.
 
-## 90-second attempts and teacher approval
+## 90-second attempts and five-second dances
 
-Every mission starts with a central Start button and a fixed 01:30 countdown. A
-verified circuit stops the clock and unlocks Next. Back remains unrestricted. A
-new mission opens with a fresh clock and clean board. Simulation Pause leaves the
-clock running; the teacher’s timer Pause/Resume retains time;
-an active wall-clock deadline is retained across page reloads.
+Use the single central Start button, or press Run, to begin the mission's 01:30
+countdown. The highlighted Time left card shows the remaining seconds and whether
+the mission is ready, counting down, verified, paused by the teacher or expired.
+The duplicate Start control below the board has been removed. Correct circuits
+stop the clock and unlock Next. Back remains unrestricted; active deadlines survive
+reloads. Simulation Pause does not stop mission time.
 
-Before class, open Teacher → Set PIN and choose 4–8 digits. There is no default
-PIN. The browser stores a salted hash locally, and changing it requires the current
-PIN. This is a classroom convenience lock, not server authentication; browser
-storage and page code remain under the device owner’s control. Use current Chrome,
-Edge, Firefox or Safari on HTTPS, localhost or a supported local-file context.
+Show answer opens an actual full-body 3D robot dance. After **five seconds of
+loaded playback**, See answer unlocks; no teacher PIN, approval form or camera is
+used. The animation keeps moving while students decide, and Replay restarts the
+five-second gate. The assignment is saved per mission and avoids adjacent repeats.
+Seven tempo/start-phase variants use one licensed dance clip, not seven distinct
+motion-captured performances. A seated or spoken alternative remains available.
 
-Show answer first displays one of seven local animated stick-figure moves. The
-assignment is random per mission, avoids adjacent repeats, and is saved locally.
-After three seconds, the teacher observes the student’s copied, seated or spoken
-version and enters their PIN to reveal that answer. There is no camera or automatic
-movement assessment. Reduced-motion preferences disable the animations while
-leaving text instructions available.
+On timeout the same saved dance appears. After five seconds, Try again prepares a
+fresh 90-second attempt without revealing an answer or marking the mission complete.
+Pending retries remain required when navigating away and back.
 
-If 90 seconds expires without a verified circuit, the same saved move opens as a
-retry challenge. Teacher approval prepares another 90-second attempt on the same
-mission, preserving the student’s work. The student must press Start again. This
-does not reveal an answer, mark a mission complete or award progress. Cancelling
-keeps the attempt expired, including when navigating away and back; Retry move brings back the same teacher-approval gate.
+The robot is the CC0 RobotExpressive model by Tomás Laulhé (Quaternius), downloaded
+from the official Three.js r170 examples. Only the full-body Dance clip is retained.
+See `vendor/ASSETS.md` for licensing, provenance and rebuild steps. Three.js and the
+model are bundled into `vendor/dance-scene.js`, and into the standalone HTML download;
+there are no runtime CDNs, remote models or streamed video. A shaped animated toy
+robot provides a labelled simple view when WebGL is unavailable. Reduced-motion
+preferences show a still pose until the user deliberately chooses Play dance.
 
-Tests: `dance_gate_test.py` checks real delay, approval and seven moves;
-`mission_clock_test.py` checks Start, deadlines, retries, reload and pause behavior.
-Both run from the repository root as `python tests/<name>.py`.
+The normal site build uses committed assets and needs no npm install. To change
+or rebuild the 3D renderer: `npm ci`, then `npm run build:dance`. CSS/JS references
+in `dist/` receive content-hash query versions to prevent stale-release cache mixes;
+plain local use and standalone HTML remain supported.
+
+Tests: `dance_gate_test.py` verifies visible changing 3D frames and the five-second
+gate; `cached_assets_test.py` tests old-cache resistance and standalone rendering;
+`mission_clock_test.py` tests real deadlines, retries, pause and reload. Run with
+`python tests/<name>.py` from the repository root.
