@@ -150,14 +150,34 @@ dialog::backdrop{background:#0f2a3a88;backdrop-filter:blur(3px)}
 #board .part:active{cursor:grabbing}
 #board .part .part-label{pointer-events:none}
 @media(max-width:600px){.toolbar{justify-content:flex-start}.toolbar .view-tools{margin-left:auto}.toolbar button{min-height:40px}}
+
+/* Learning aids are separate from the editable circuit and mission scoring. */
+.board-help{display:flex;justify-content:flex-end;gap:8px;margin:0 0 8px}
+.board-help button{min-height:40px;font-weight:600}
+#hint[aria-pressed=true]{background:var(--teal);color:#fff}
+#hintLayer{color:var(--teal);opacity:.4;pointer-events:none}
+.guide-wire{fill:none;stroke:var(--teal);stroke-width:3;stroke-dasharray:9 7;stroke-linejoin:round}
+.guide-label{font-size:18px;fill:var(--navy);font-weight:600;stroke:none}
+.guide-dot{fill:white;stroke:var(--teal);stroke-width:2}
+.guide-terminal-label{font-size:15px;fill:var(--navy);stroke:none;font-weight:700}
+#hintLabel{position:absolute;top:10px;left:12px;font-size:12px;background:white;border:1px solid var(--teal);border-radius:20px;padding:4px 10px;color:var(--teal);pointer-events:none}
+#answerDialog{width:min(94vw,1040px);max-width:1040px;max-height:94dvh;text-align:left;overflow:auto;padding:20px}
+.answer-heading{display:flex;justify-content:space-between;align-items:center;gap:15px}
+.answer-heading h2{font-size:19px}
+#answerParts,#answerNote{font-size:14px;color:var(--muted)}
+#answerPicture{width:100%;max-height:60dvh;background:#f7fafb;border:1px solid var(--line);border-radius:12px;color:var(--navy)}
+#answerPicture .guide-wire{stroke-dasharray:none;stroke-width:3}
+#answerConnections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 24px;padding-left:24px;color:var(--muted);font-size:14px}
+@media(max-width:600px){#answerConnections{grid-template-columns:1fr}.answer-heading h2{font-size:16px}#answerDialog{padding:12px}}
+.board-help[hidden]{display:none}
 </style></head><body>
 <header><div class="brand"><span class="brandmark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span><div><h1>CircuitLab</h1><p>Build. Connect. Discover.</p></div></div>
 <nav aria-label="Learning modes" id="modes"><button data-mode="explorer"><span aria-hidden="true">◎</span> Symbols</button><button data-mode="build" class="active"><span aria-hidden="true">✚</span> Free build</button><button data-mode="missions"><span aria-hidden="true">★</span> Missions</button><button data-mode="detective"><span aria-hidden="true">⌕</span> Detective</button><button data-mode="challenge"><span aria-hidden="true">⚑</span> Challenge</button></nav>
 <div class="header-actions"><button id="sound" class="icon" aria-pressed="false" aria-label="Sound off" title="Sound">🔇</button><button id="teacher" class="icon wide" aria-pressed="false" title="Teacher tools">Teacher</button><button id="fullscreen" class="icon" aria-label="Fullscreen" title="Fullscreen">⛶</button></div></header>
 <main><aside class="library"><div class="section-title"><h2>Parts</h2><span>Tap or drag</span></div><div id="parts"></div></aside>
-<section class="middle"><div id="activity" class="activity"></div><div class="toolbar"><div class="toolgroup"><button id="selectTool" class="active" title="Move parts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l14 8-6 2-2 6z"/></svg>Move</button><button id="wireTool" title="Draw wires"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/><path d="M7 19h5V5h5"/></svg>Wire</button></div><div class="toolgroup view-tools" role="group" aria-label="Component view"><button id="physicalView" class="active" aria-pressed="true">3D parts</button><button id="symbolView" aria-pressed="false">Symbols</button></div><div class="toolgroup"><button id="undo" title="Undo (Ctrl+Z)" aria-label="Undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button><button id="redo" title="Redo" aria-label="Redo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5M20 9H9a5 5 0 0 0 0 10h3"/></svg></button><button id="rotate" title="Rotate (R)" aria-label="Rotate"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-3-6.2M20 4v5h-5"/></svg></button><button id="delete" title="Delete selected" aria-label="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button><button id="clear" title="Clear board">Clear</button></div></div><div class="board-wrap"><svg id="board" viewBox="0 0 1200 760" role="img" aria-label="Interactive circuit workspace" tabindex="0"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="0" cy="0" r="1" fill="#cfdbe4"/></pattern></defs><rect width="1200" height="760" fill="url(#grid)"/><g id="wires"></g><g id="components"></g><g id="flows" pointer-events="none"></g></svg><div id="empty">Start here<small>Pick a part, or load an example below.</small></div><div id="boardHint">Tap two dots to join them</div></div><div class="bottom-bar"><label><span class="sr-only">Example</span><select id="examples"><option value="">Load an example…</option><option value="single">One lamp</option><option value="series">Series resistors</option><option value="parallel">Parallel resistors</option><option value="meters">Meters</option><option value="led">LED + resistor</option></select></label><button id="reset">Reset</button><span id="saveStatus">Saved</span></div><section id="explorerPanel" hidden></section></section>
+<section class="middle"><div id="activity" class="activity"></div><div class="toolbar"><div class="toolgroup"><button id="selectTool" class="active" title="Move parts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l14 8-6 2-2 6z"/></svg>Move</button><button id="wireTool" title="Draw wires"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/><path d="M7 19h5V5h5"/></svg>Wire</button></div><div class="toolgroup view-tools" role="group" aria-label="Component view"><button id="physicalView" class="active" aria-pressed="true">3D parts</button><button id="symbolView" aria-pressed="false">Symbols</button></div><div class="toolgroup"><button id="undo" title="Undo (Ctrl+Z)" aria-label="Undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button><button id="redo" title="Redo" aria-label="Redo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5M20 9H9a5 5 0 0 0 0 10h3"/></svg></button><button id="rotate" title="Rotate (R)" aria-label="Rotate"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-3-6.2M20 4v5h-5"/></svg></button><button id="delete" title="Delete selected" aria-label="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button><button id="clear" title="Clear board">Clear</button></div></div><div id="boardHelp" class="board-help"><button id="hint" aria-pressed="false">Hint</button><button id="showAnswer">Show answer</button></div><div class="board-wrap"><svg id="board" viewBox="0 0 1200 760" role="img" aria-label="Interactive circuit workspace" tabindex="0"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="0" cy="0" r="1" fill="#cfdbe4"/></pattern></defs><rect width="1200" height="760" fill="url(#grid)"/><g id="hintLayer" pointer-events="none" aria-hidden="true"></g><g id="wires"></g><g id="components"></g><g id="flows" pointer-events="none"></g></svg><div id="empty">Start here<small>Pick a part, or load an example below.</small></div><div id="hintLabel" hidden>Guide · add these parts</div><div id="boardHint">Tap two dots to join them</div></div><div class="bottom-bar"><label><span class="sr-only">Example</span><select id="examples"><option value="">Load an example…</option><option value="single">One lamp</option><option value="series">Series resistors</option><option value="parallel">Parallel resistors</option><option value="meters">Meters</option><option value="led">LED + resistor</option></select></label><button id="reset">Reset</button><span id="saveStatus">Saved</span></div><section id="explorerPanel" hidden></section></section>
 <aside class="readings"><div class="section-title"><h2>Results</h2><span id="runBadge">Paused</span></div><div class="run-controls"><button id="run" class="primary">▶ Run</button><button id="pause">❚❚ Pause</button></div><label class="flow-label">Arrows<select id="flow"><option value="conventional">Current (+ → −)</option><option value="electron">Electrons (− → +)</option><option value="none">Off</option></select></label><div id="feedback" role="status" aria-live="polite"></div><section id="inspector"></section><section class="meter-panel"><h3>Readings</h3><div id="measurements"></div></section><details><summary>Formulas</summary><p><b>V = IR</b> · volts = amps × ohms</p><p><b>P = VI</b> · power in watts</p><p><b>Q = It</b> · charge = current × time</p><p>Series: same current.<br>Parallel: same voltage.</p></details><details><summary>Help</summary><p>3D parts show real objects; Symbols shows circuit diagrams.</p><p>Tap a part, then tap the board. Tap two dots to wire them. Double-tap a switch to flip it.</p><p>Keys: R rotate · Delete remove · Ctrl+Z undo.</p><p>Orange = current. Blue = electrons. A minus sign means the opposite direction.</p><p>Model: ideal DC only. No AC or charging.</p></details></aside>
-</main><section id="teacherPanel" hidden><h2>Teacher</h2><label>Minutes<input id="minutes" type="number" min="1" max="60" value="3"></label><strong id="timer">03:00</strong><button id="timerStart">Start</button><button id="timerPause">Pause</button><button id="timerReset">Reset</button><button id="nextMission">Next mission</button><button id="reveal">Show answer</button><p id="explanation" hidden></p></section><dialog id="symbolDialog"><button id="closeDialog" aria-label="Close">✕</button><div id="symbolDetail"></div></dialog><div id="toast" role="status"></div>
+</main><section id="teacherPanel" hidden><h2>Teacher</h2><label>Minutes<input id="minutes" type="number" min="1" max="60" value="3"></label><strong id="timer">03:00</strong><button id="timerStart">Start</button><button id="timerPause">Pause</button><button id="timerReset">Reset</button><button id="nextMission">Next mission</button><button id="reveal">Show answer</button><p id="explanation" hidden></p></section><dialog id="symbolDialog"><button id="closeDialog" aria-label="Close">✕</button><div id="symbolDetail"></div></dialog><dialog id="answerDialog" aria-labelledby="answerTitle"><div class="answer-heading"><h2 id="answerTitle">Answer</h2><button id="closeAnswer">Close</button></div><p id="answerParts"></p><svg id="answerPicture" viewBox="0 0 1200 760" role="img" aria-label="Correct circuit and labelled wire connections"><g id="answerDrawing"></g></svg><p id="answerNote"></p><details><summary>Connections</summary><ol id="answerConnections"></ol></details></dialog><div id="toast" role="status"></div>
 <script>/* CircuitLab DC engine. Modified nodal analysis, partial-pivot Gaussian elimination.
    No shunt conductances or made-up readings: each conductive island has its own reference. */
 (function(root){
@@ -397,7 +417,8 @@ function renderBoard(){
   cg.append(g);
  }
  for(const [id,view] of [['physicalView','physical'],['symbolView','symbols']]){const active=componentView===view;$('#'+id).classList.toggle('active',active);$('#'+id).setAttribute('aria-pressed',active);}
- $('#empty').hidden=!!state.components.length;
+ renderGuide();
+ $('#empty').hidden=!!state.components.length||guideVisible;
  $('#selectTool').classList.toggle('active',tool==='select'&&!placing);$('#wireTool').classList.toggle('active',tool==='wire');
  document.querySelectorAll('#parts button').forEach(b=>b.classList.toggle('active',b.dataset.type===placing));
 }
@@ -459,12 +480,68 @@ function load(name){checkpoint();state=makeExample(name);example=name;selected=a
 $('#examples').onchange=e=>{if(e.target.value)load(e.target.value);};$('#reset').onclick=()=>{if(example)load(example);else{$('#clear').click();}};
 function showSymbol(type){$('#symbolDetail').innerHTML=icon(type)+'<h2>'+PARTS[type].name+'</h2><p>'+PARTS[type].info+'</p>';$('#symbolDialog').showModal();}$('#closeDialog').onclick=()=>$('#symbolDialog').close();
 let quizType='';function quiz(){const keys=Object.keys(PARTS);quizType=keys[Math.floor(Math.random()*keys.length)];const choices=[quizType,...keys.filter(t=>t!==quizType).sort(()=>Math.random()-.5).slice(0,3)].sort(()=>Math.random()-.5);const box=$('#explorerPanel');box.innerHTML='<h2>Which symbol is this?</h2><svg class="quiz-symbol" viewBox="-60 -55 120 100">'+symbol(quizType)+'</svg><div id="quizChoices"></div><p id="quizAnswer" role="status">Choose its name.</p>';for(const t of choices){const b=document.createElement('button');b.textContent=PARTS[t].name;b.onclick=()=>{const correct=t===quizType;$('#quizAnswer').textContent=correct?'Correct! '+PARTS[t].info:'Not quite. Try again.';if(correct){beep();if(!$('#nextQuiz')){const n=document.createElement('button');n.id='nextQuiz';n.textContent='Next symbol';n.onclick=quiz;box.append(n);}}};$('#quizChoices').append(b);}}
+// Answer networks are independent examples; opening a guide never edits student state.
+let guideVisible=false,guideKey='';
+function helpKey(){return [mode,mission,detective,example].join(':');}
+function guideMission(){
+ if(mode==='missions'||mode==='challenge')return mission;
+ if(mode==='detective')return detective===2?7:2;
+ return ({series:4,parallel:5,meters:3,led:7,'reverse-led':7,'series-meter':2,'short-meter':2})[example]??0;
+}
+function solutionCircuit(index){
+ const components=[],wires=[];let id=0;
+ const add=(type,x,y,value)=>{const c={id:'guide'+(++id),type,x,y,rotation:0,value:value??PARTS[type].value,closed:type==='switch'};components.push(c);return c;};
+ const join=(a,t,b,u,via=[])=>wires.push({id:'guide-wire'+wires.length,a:a.id+':'+t,b:b.id+':'+u,via});
+ const source=add('battery',200,380,6);source.rotation=90;
+ const kinds=[['lamp'],['switch','lamp'],['ammeter','lamp'],['lamp'],['resistor','resistor'],['resistor'],['variable','lamp'],['resistor','led'],['ldr','lamp'],['switch','ammeter','lamp']][index];
+ const chain=kinds.map((type,i)=>add(type,kinds.length===1?650:350+i*600/(kinds.length-1),180,type==='resistor'?(index===7?330:100):type==='variable'?200:undefined));
+ join(source,0,chain[0],0,[[200,180]]);
+ for(let i=1;i<chain.length;i++)join(chain[i-1],1,chain[i],0);
+ join(chain.at(-1),1,source,1,[[1080,180],[1080,620],[200,620]]);
+ if(index===5){const second=add('resistor',650,420,100);join(chain[0],0,second,0,[[500,180],[500,420]]);join(chain[0],1,second,1,[[800,180],[800,420]]);}
+ if(index===3||index===9){const lamp=chain.at(-1),meter=add('voltmeter',lamp.x,420);join(lamp,0,meter,0);join(lamp,1,meter,1);}
+ return {components,wires};
+}
+function guideEndpoint(network,key){const [id,t]=key.split(':');return terminal(network.components.find(c=>c.id===id),+t);}
+function guideWirePath(network,wire){const pts=[guideEndpoint(network,wire.a),...(wire.via||[]).map(([x,y])=>({x,y})),guideEndpoint(network,wire.b)];let path='M'+pts[0].x+' '+pts[0].y;for(let i=1;i<pts.length;i++){path+='H'+pts[i].x+'V'+pts[i].y;}return path;}
+function drawGuide(container,network,answer=false){
+ container.replaceChildren();
+ network.wires.slice(0,answer?network.wires.length:1).forEach(w=>container.append(svgNode('path',{d:guideWirePath(network,w),class:'guide-wire'})));
+ network.components.forEach((c,i)=>{
+  const g=svgNode('g',{'data-guide-part':c.type,transform:`translate(${c.x},${c.y})`}),shape=svgNode('g',{transform:`rotate(${c.rotation})`});shape.innerHTML=symbol(c.type,c.closed);g.append(shape);
+  const label=svgNode('text',{x:c.type==='battery'?-105:0,y:c.type==='battery'?10:65,'text-anchor':'middle',class:'guide-label'});label.textContent=`${i+1}. ${PARTS[c.type].name}`+(c.value!==undefined?` · ${c.value} ${PARTS[c.type].unit}`:'');g.append(label);
+  for(let t=0;t<2;t++){const p=terminal(c,t);g.append(svgNode('circle',{cx:p.x-c.x,cy:p.y-c.y,r:7,class:'guide-dot'}));if(answer){const letter=svgNode('text',{x:p.x-c.x,y:p.y-c.y-14,'text-anchor':'middle',class:'guide-terminal-label'});letter.textContent=t===0?'a':'b';g.append(letter);}}
+  container.append(g);
+ });
+}
+function renderGuide(){
+ if(guideKey!==helpKey()){guideKey=helpKey();guideVisible=false;$('#answerDialog').close();}
+ const enabled=mode!=='explorer';$('#boardHelp').hidden=!enabled;
+ $('#hint').setAttribute('aria-pressed',guideVisible);$('#hint').textContent=guideVisible?'Hide hint':'Hint';
+ $('#hintLayer').replaceChildren();$('#hintLabel').hidden=!guideVisible;$('#empty').hidden=!!state.components.length||guideVisible;
+ if(guideVisible&&enabled)drawGuide($('#hintLayer'),solutionCircuit(guideMission()));
+}
+function showAnswer(){
+ const index=guideMission(),network=solutionCircuit(index),calculated=CircuitSolver.solve(network);
+ if(!calculated.ok||!calculated.active){notify('This guide is unavailable.');return;}
+ $('#answerTitle').textContent='Answer · '+missions[index][0];
+ $('#answerNote').textContent=mode==='detective'?detectives[detective][2]:missions[index][2];
+ drawGuide($('#answerDrawing'),network,true);
+ const list=$('#answerConnections');list.replaceChildren();
+ network.wires.forEach(w=>{const label=key=>{const [id,t]=key.split(':');return `${network.components.findIndex(c=>c.id===id)+1}${+t===0?'a':'b'}`;};const li=document.createElement('li');li.textContent=`Join ${label(w.a)} to ${label(w.b)}.`;list.append(li);});
+ $('#answerParts').textContent=network.components.map((c,i)=>`${i+1}. ${PARTS[c.type].name}`).join(' · ');
+ $('#answerDialog').showModal();
+}
+$('#hint').onclick=()=>{guideVisible=!guideVisible;renderGuide();};
+$('#showAnswer').onclick=showAnswer;
+$('#closeAnswer').onclick=()=>$('#answerDialog').close();
+
 function activity(){const a=$('#activity');a.replaceChildren();const h=document.createElement('h2'),p=document.createElement('p');a.append(h,p);$('#explorerPanel').hidden=mode!=='explorer';
  if(mode==='build'){h.textContent='Free build';p.textContent='Add parts → join the dots → press Run.';}
  if(mode==='explorer'){h.textContent='Symbols';p.textContent='Tap a part to learn it. Then try the quiz.';quiz();}
  if(mode==='missions'||mode==='challenge'){const m=missions[mission];h.textContent=`Mission ${mission+1}/10 · ${m[0]}`;p.textContent=m[1];const progress=document.createElement('div');progress.className='progress';progress.innerHTML='<div style="width:'+classroom.completed.length*10+'%"></div>';a.append(progress);const status=document.createElement('span');status.id='missionStatus';a.append(status);const next=document.createElement('button');next.textContent='Next →';next.onclick=nextMission;a.append(next);if(mode==='challenge')scoreboard(a);}
  if(mode==='detective'){const d=detectives[detective];h.textContent=`Case ${detective+1}/3 · ${d[0]}`;p.textContent=d[1];const status=document.createElement('span');status.id='missionStatus';a.append(status);const b=document.createElement('button');b.textContent='Restart';b.onclick=()=>load(d[3]);const next=document.createElement('button');next.textContent='Next case →';next.className='primary';next.onclick=()=>{detective=(detective+1)%detectives.length;load(detectives[detective][3]);activity();};a.append(b,next);}
- document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));validate();
+ document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));validate();renderGuide();
 }
 function nextMission(){mission=(mission+1)%missions.length;$('#explanation').hidden=true;remaining=+$('#minutes').value*60;timerOn=false;renderTimer();activity();persist();}
 $('#modes').onclick=e=>{const b=e.target.closest('[data-mode]');if(!b)return;mode=b.dataset.mode;placing=armed=null;if(mode==='detective')load(detectives[detective][3]);activity();renderBoard();persist();};
@@ -483,7 +560,7 @@ function validate(){const status=$('#missionStatus');if(!status)return;let passe
  status.textContent=passed?'✓ Circuit verified!':'Build it, then press Run.';status.className=passed?'success':'pending';}
 $('#teacher').onclick=()=>{const panel=$('#teacherPanel');panel.hidden=!panel.hidden;$('#teacher').setAttribute('aria-pressed',!panel.hidden);};
 function renderTimer(){$('#timer').textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');}
-$('#minutes').onchange=()=>{const v=Math.max(1,Math.min(60,+$('#minutes').value||3));$('#minutes').value=v;remaining=v*60;timerOn=false;renderTimer();};$('#timerStart').onclick=()=>{if(remaining<=0)remaining=+$('#minutes').value*60;timerOn=true;running=true;changed();};$('#timerPause').onclick=()=>{timerOn=false;running=false;changed();};$('#timerReset').onclick=()=>{timerOn=false;remaining=+$('#minutes').value*60;renderTimer();};$('#nextMission').onclick=nextMission;$('#reveal').onclick=()=>{$('#explanation').hidden=false;$('#explanation').textContent=mode==='detective'?detectives[detective][2]:missions[mission][2];};
+$('#minutes').onchange=()=>{const v=Math.max(1,Math.min(60,+$('#minutes').value||3));$('#minutes').value=v;remaining=v*60;timerOn=false;renderTimer();};$('#timerStart').onclick=()=>{if(remaining<=0)remaining=+$('#minutes').value*60;timerOn=true;running=true;changed();};$('#timerPause').onclick=()=>{timerOn=false;running=false;changed();};$('#timerReset').onclick=()=>{timerOn=false;remaining=+$('#minutes').value*60;renderTimer();};$('#nextMission').onclick=nextMission;$('#reveal').onclick=()=>{$('#explanation').hidden=false;$('#explanation').textContent=mode==='detective'?detectives[detective][2]:missions[mission][2];showAnswer();};
 setInterval(()=>{if(timerOn&&remaining>0){remaining--;renderTimer();if(!remaining){timerOn=false;notify('Time is up!');beep();}}},1000);
 $('#sound').onclick=()=>{sound=!sound;$('#sound').textContent=sound?'🔊':'🔇';$('#sound').setAttribute('aria-label',sound?'Sound on':'Sound off');$('#sound').setAttribute('aria-pressed',sound);beep();};$('#fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{notify('Fullscreen is unavailable in this browser.');}};
 // Wire flow uses KCL at each terminal, distributing cycles without inventing meter readings.

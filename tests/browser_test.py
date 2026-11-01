@@ -63,6 +63,7 @@ with sync_playwright() as p:
  page.locator('#teacher').click();page.locator('#timerStart').click();assert page.evaluate('timerOn && running')
  page.locator('#timerPause').click();assert page.evaluate('!timerOn && !running')
  page.locator('#reveal').click();assert page.locator('#explanation').is_visible()
+ page.locator('#closeAnswer').click()
  # Detective faults are genuine faults, not cosmetic.
  page.locator('[data-mode="detective"]').click();assert page.evaluate('!result.active')
  page.locator('#activity button').last.click();assert page.evaluate('result.short')

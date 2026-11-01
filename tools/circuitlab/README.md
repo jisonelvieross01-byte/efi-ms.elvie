@@ -132,3 +132,14 @@ rotation controls and DC models; there is no 3D camera or WebGL dependency.
 
 Run `python tests/physical_parts_test.py` from the repository root for appearance,
 view persistence, drop behavior, readings and 375/960/1920 layout checks.
+
+## Hints and answers
+
+Hint shows the required IEC symbols and a first connection as a faint board guide.
+Show answer opens a complete labelled circuit picture; the Connections fold lists
+terminal pairs (for example, 1a to 2a). Guides match all ten missions, the three
+Detective cases, and the selected Free build example. With no example selected,
+Free build shows a simple lamp circuit. Teacher Show answer opens the picture too.
+Guides never change the student's circuit, undo history, readings or points, and
+clear when the task changes. The ten reference circuits are checked against the
+real mission validator in `tests/mission_help_test.py`.

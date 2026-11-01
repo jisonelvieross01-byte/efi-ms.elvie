@@ -66,7 +66,8 @@ function renderBoard(){
   cg.append(g);
  }
  for(const [id,view] of [['physicalView','physical'],['symbolView','symbols']]){const active=componentView===view;$('#'+id).classList.toggle('active',active);$('#'+id).setAttribute('aria-pressed',active);}
- $('#empty').hidden=!!state.components.length;
+ renderGuide();
+ $('#empty').hidden=!!state.components.length||guideVisible;
  $('#selectTool').classList.toggle('active',tool==='select'&&!placing);$('#wireTool').classList.toggle('active',tool==='wire');
  document.querySelectorAll('#parts button').forEach(b=>b.classList.toggle('active',b.dataset.type===placing));
 }
@@ -128,12 +129,68 @@ function load(name){checkpoint();state=makeExample(name);example=name;selected=a
 $('#examples').onchange=e=>{if(e.target.value)load(e.target.value);};$('#reset').onclick=()=>{if(example)load(example);else{$('#clear').click();}};
 function showSymbol(type){$('#symbolDetail').innerHTML=icon(type)+'<h2>'+PARTS[type].name+'</h2><p>'+PARTS[type].info+'</p>';$('#symbolDialog').showModal();}$('#closeDialog').onclick=()=>$('#symbolDialog').close();
 let quizType='';function quiz(){const keys=Object.keys(PARTS);quizType=keys[Math.floor(Math.random()*keys.length)];const choices=[quizType,...keys.filter(t=>t!==quizType).sort(()=>Math.random()-.5).slice(0,3)].sort(()=>Math.random()-.5);const box=$('#explorerPanel');box.innerHTML='<h2>Which symbol is this?</h2><svg class="quiz-symbol" viewBox="-60 -55 120 100">'+symbol(quizType)+'</svg><div id="quizChoices"></div><p id="quizAnswer" role="status">Choose its name.</p>';for(const t of choices){const b=document.createElement('button');b.textContent=PARTS[t].name;b.onclick=()=>{const correct=t===quizType;$('#quizAnswer').textContent=correct?'Correct! '+PARTS[t].info:'Not quite. Try again.';if(correct){beep();if(!$('#nextQuiz')){const n=document.createElement('button');n.id='nextQuiz';n.textContent='Next symbol';n.onclick=quiz;box.append(n);}}};$('#quizChoices').append(b);}}
+// Answer networks are independent examples; opening a guide never edits student state.
+let guideVisible=false,guideKey='';
+function helpKey(){return [mode,mission,detective,example].join(':');}
+function guideMission(){
+ if(mode==='missions'||mode==='challenge')return mission;
+ if(mode==='detective')return detective===2?7:2;
+ return ({series:4,parallel:5,meters:3,led:7,'reverse-led':7,'series-meter':2,'short-meter':2})[example]??0;
+}
+function solutionCircuit(index){
+ const components=[],wires=[];let id=0;
+ const add=(type,x,y,value)=>{const c={id:'guide'+(++id),type,x,y,rotation:0,value:value??PARTS[type].value,closed:type==='switch'};components.push(c);return c;};
+ const join=(a,t,b,u,via=[])=>wires.push({id:'guide-wire'+wires.length,a:a.id+':'+t,b:b.id+':'+u,via});
+ const source=add('battery',200,380,6);source.rotation=90;
+ const kinds=[['lamp'],['switch','lamp'],['ammeter','lamp'],['lamp'],['resistor','resistor'],['resistor'],['variable','lamp'],['resistor','led'],['ldr','lamp'],['switch','ammeter','lamp']][index];
+ const chain=kinds.map((type,i)=>add(type,kinds.length===1?650:350+i*600/(kinds.length-1),180,type==='resistor'?(index===7?330:100):type==='variable'?200:undefined));
+ join(source,0,chain[0],0,[[200,180]]);
+ for(let i=1;i<chain.length;i++)join(chain[i-1],1,chain[i],0);
+ join(chain.at(-1),1,source,1,[[1080,180],[1080,620],[200,620]]);
+ if(index===5){const second=add('resistor',650,420,100);join(chain[0],0,second,0,[[500,180],[500,420]]);join(chain[0],1,second,1,[[800,180],[800,420]]);}
+ if(index===3||index===9){const lamp=chain.at(-1),meter=add('voltmeter',lamp.x,420);join(lamp,0,meter,0);join(lamp,1,meter,1);}
+ return {components,wires};
+}
+function guideEndpoint(network,key){const [id,t]=key.split(':');return terminal(network.components.find(c=>c.id===id),+t);}
+function guideWirePath(network,wire){const pts=[guideEndpoint(network,wire.a),...(wire.via||[]).map(([x,y])=>({x,y})),guideEndpoint(network,wire.b)];let path='M'+pts[0].x+' '+pts[0].y;for(let i=1;i<pts.length;i++){path+='H'+pts[i].x+'V'+pts[i].y;}return path;}
+function drawGuide(container,network,answer=false){
+ container.replaceChildren();
+ network.wires.slice(0,answer?network.wires.length:1).forEach(w=>container.append(svgNode('path',{d:guideWirePath(network,w),class:'guide-wire'})));
+ network.components.forEach((c,i)=>{
+  const g=svgNode('g',{'data-guide-part':c.type,transform:`translate(${c.x},${c.y})`}),shape=svgNode('g',{transform:`rotate(${c.rotation})`});shape.innerHTML=symbol(c.type,c.closed);g.append(shape);
+  const label=svgNode('text',{x:c.type==='battery'?-105:0,y:c.type==='battery'?10:65,'text-anchor':'middle',class:'guide-label'});label.textContent=`${i+1}. ${PARTS[c.type].name}`+(c.value!==undefined?` · ${c.value} ${PARTS[c.type].unit}`:'');g.append(label);
+  for(let t=0;t<2;t++){const p=terminal(c,t);g.append(svgNode('circle',{cx:p.x-c.x,cy:p.y-c.y,r:7,class:'guide-dot'}));if(answer){const letter=svgNode('text',{x:p.x-c.x,y:p.y-c.y-14,'text-anchor':'middle',class:'guide-terminal-label'});letter.textContent=t===0?'a':'b';g.append(letter);}}
+  container.append(g);
+ });
+}
+function renderGuide(){
+ if(guideKey!==helpKey()){guideKey=helpKey();guideVisible=false;$('#answerDialog').close();}
+ const enabled=mode!=='explorer';$('#boardHelp').hidden=!enabled;
+ $('#hint').setAttribute('aria-pressed',guideVisible);$('#hint').textContent=guideVisible?'Hide hint':'Hint';
+ $('#hintLayer').replaceChildren();$('#hintLabel').hidden=!guideVisible;$('#empty').hidden=!!state.components.length||guideVisible;
+ if(guideVisible&&enabled)drawGuide($('#hintLayer'),solutionCircuit(guideMission()));
+}
+function showAnswer(){
+ const index=guideMission(),network=solutionCircuit(index),calculated=CircuitSolver.solve(network);
+ if(!calculated.ok||!calculated.active){notify('This guide is unavailable.');return;}
+ $('#answerTitle').textContent='Answer · '+missions[index][0];
+ $('#answerNote').textContent=mode==='detective'?detectives[detective][2]:missions[index][2];
+ drawGuide($('#answerDrawing'),network,true);
+ const list=$('#answerConnections');list.replaceChildren();
+ network.wires.forEach(w=>{const label=key=>{const [id,t]=key.split(':');return `${network.components.findIndex(c=>c.id===id)+1}${+t===0?'a':'b'}`;};const li=document.createElement('li');li.textContent=`Join ${label(w.a)} to ${label(w.b)}.`;list.append(li);});
+ $('#answerParts').textContent=network.components.map((c,i)=>`${i+1}. ${PARTS[c.type].name}`).join(' · ');
+ $('#answerDialog').showModal();
+}
+$('#hint').onclick=()=>{guideVisible=!guideVisible;renderGuide();};
+$('#showAnswer').onclick=showAnswer;
+$('#closeAnswer').onclick=()=>$('#answerDialog').close();
+
 function activity(){const a=$('#activity');a.replaceChildren();const h=document.createElement('h2'),p=document.createElement('p');a.append(h,p);$('#explorerPanel').hidden=mode!=='explorer';
  if(mode==='build'){h.textContent='Free build';p.textContent='Add parts → join the dots → press Run.';}
  if(mode==='explorer'){h.textContent='Symbols';p.textContent='Tap a part to learn it. Then try the quiz.';quiz();}
  if(mode==='missions'||mode==='challenge'){const m=missions[mission];h.textContent=`Mission ${mission+1}/10 · ${m[0]}`;p.textContent=m[1];const progress=document.createElement('div');progress.className='progress';progress.innerHTML='<div style="width:'+classroom.completed.length*10+'%"></div>';a.append(progress);const status=document.createElement('span');status.id='missionStatus';a.append(status);const next=document.createElement('button');next.textContent='Next →';next.onclick=nextMission;a.append(next);if(mode==='challenge')scoreboard(a);}
  if(mode==='detective'){const d=detectives[detective];h.textContent=`Case ${detective+1}/3 · ${d[0]}`;p.textContent=d[1];const status=document.createElement('span');status.id='missionStatus';a.append(status);const b=document.createElement('button');b.textContent='Restart';b.onclick=()=>load(d[3]);const next=document.createElement('button');next.textContent='Next case →';next.className='primary';next.onclick=()=>{detective=(detective+1)%detectives.length;load(detectives[detective][3]);activity();};a.append(b,next);}
- document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));validate();
+ document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));validate();renderGuide();
 }
 function nextMission(){mission=(mission+1)%missions.length;$('#explanation').hidden=true;remaining=+$('#minutes').value*60;timerOn=false;renderTimer();activity();persist();}
 $('#modes').onclick=e=>{const b=e.target.closest('[data-mode]');if(!b)return;mode=b.dataset.mode;placing=armed=null;if(mode==='detective')load(detectives[detective][3]);activity();renderBoard();persist();};
@@ -152,7 +209,7 @@ function validate(){const status=$('#missionStatus');if(!status)return;let passe
  status.textContent=passed?'✓ Circuit verified!':'Build it, then press Run.';status.className=passed?'success':'pending';}
 $('#teacher').onclick=()=>{const panel=$('#teacherPanel');panel.hidden=!panel.hidden;$('#teacher').setAttribute('aria-pressed',!panel.hidden);};
 function renderTimer(){$('#timer').textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');}
-$('#minutes').onchange=()=>{const v=Math.max(1,Math.min(60,+$('#minutes').value||3));$('#minutes').value=v;remaining=v*60;timerOn=false;renderTimer();};$('#timerStart').onclick=()=>{if(remaining<=0)remaining=+$('#minutes').value*60;timerOn=true;running=true;changed();};$('#timerPause').onclick=()=>{timerOn=false;running=false;changed();};$('#timerReset').onclick=()=>{timerOn=false;remaining=+$('#minutes').value*60;renderTimer();};$('#nextMission').onclick=nextMission;$('#reveal').onclick=()=>{$('#explanation').hidden=false;$('#explanation').textContent=mode==='detective'?detectives[detective][2]:missions[mission][2];};
+$('#minutes').onchange=()=>{const v=Math.max(1,Math.min(60,+$('#minutes').value||3));$('#minutes').value=v;remaining=v*60;timerOn=false;renderTimer();};$('#timerStart').onclick=()=>{if(remaining<=0)remaining=+$('#minutes').value*60;timerOn=true;running=true;changed();};$('#timerPause').onclick=()=>{timerOn=false;running=false;changed();};$('#timerReset').onclick=()=>{timerOn=false;remaining=+$('#minutes').value*60;renderTimer();};$('#nextMission').onclick=nextMission;$('#reveal').onclick=()=>{$('#explanation').hidden=false;$('#explanation').textContent=mode==='detective'?detectives[detective][2]:missions[mission][2];showAnswer();};
 setInterval(()=>{if(timerOn&&remaining>0){remaining--;renderTimer();if(!remaining){timerOn=false;notify('Time is up!');beep();}}},1000);
 $('#sound').onclick=()=>{sound=!sound;$('#sound').textContent=sound?'🔊':'🔇';$('#sound').setAttribute('aria-label',sound?'Sound on':'Sound off');$('#sound').setAttribute('aria-pressed',sound);beep();};$('#fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{notify('Fullscreen is unavailable in this browser.');}};
 // Wire flow uses KCL at each terminal, distributing cycles without inventing meter readings.
