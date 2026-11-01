@@ -14,10 +14,10 @@ with sync_playwright() as p:
  page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.goto(f'http://127.0.0.1:{server.server_port}/tools/circuitlab/index.html')
  page.locator('[data-mode="missions"]').click()
- # All twenty solutions pass the actual mission checks, without marking progress.
- for i in range(20):
+ # All twenty-four solutions pass the actual mission checks, without marking progress.
+ for i in range(24):
   assert page.evaluate('''i=>{const oldState=state,oldResult=result;try{state=solutionCircuit(i);result=CircuitSolver.solve(state);return result.ok&&result.active&&checkMission(i);}finally{state=oldState;result=oldResult;}}''',i),i
- for i in range(20):
+ for i in range(24):
   page.evaluate('(i)=>{mission=i;activity()}',i)
   before=page.evaluate('JSON.stringify({state,serial,history,future,classroom,saved:localStorage.getItem("circuitlab-v1")})')
   assert page.locator('#activity button').count()==2
@@ -57,4 +57,4 @@ with sync_playwright() as p:
  assert not errors,errors
  browser.close()
 server.shutdown()
-print('PASS: all twenty answer circuits validate; partial hints/full labelled diagrams; no state, history, score or save changes; task resets, teacher reveal and 375/960/1920 layouts.')
+print('PASS: all twenty-four answer circuits validate; partial hints/full labelled diagrams; no state, history, score or save changes; task resets, teacher reveal and 375/960/1920 layouts.')

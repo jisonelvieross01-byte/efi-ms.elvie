@@ -31,7 +31,7 @@ No service worker or online first visit is required.
 - Run circuit calculates DC steady state. Adjust the selected source voltage or
   load resistance with its slider. Pause hides readings and stops flow animation.
 - Select a switch and use its toggle, or double-tap it. Undo/redo covers board edits.
-- CircuitLab has one navigation item: Mission, with 20 tasks.
+- CircuitLab has one navigation item: Mission, with 24 tasks.
 - Next is locked until the current circuit is verified; advancing clears the board,
   selection, undo/redo history and timer while preserving completed-mission progress.
 - Back always works without completing the current task and opens the previous
@@ -135,10 +135,10 @@ view persistence, drop behavior, readings and 375/960/1920 layout checks.
 
 Hint shows the required IEC symbols and a first connection as a faint board guide.
 Show answer opens a complete labelled circuit picture; the Connections fold lists
-terminal pairs (for example, 1a to 2a). All 20 missions have their own validated
+terminal pairs (for example, 1a to 2a). All 24 missions have their own validated
 reference circuit. Teacher Show answer opens the picture too.
 Guides never change the student's circuit, undo history, readings or points, and
-clear when the task changes. The twenty reference circuits are checked against the
+clear when the task changes. The twenty-four reference circuits are checked against the
 real mission validator in `tests/mission_help_test.py`.
 
 ## Rotate and stretch wires
@@ -166,9 +166,12 @@ stretch/shorten, reconnect, cancellation, history, persistence and layout sizes.
 
 1–10: lamp, switch, series ammeter, parallel voltmeter, series resistors, parallel
 resistors, variable resistance, LED protection, sensing and combined meters.
-11–20: Ohm’s law, reduced current, a single cell, series lamps, parallel lamps,
+11–24: Ohm’s law, reduced current, a single cell, series lamps, parallel lamps,
 LDR tuning, thermistor resistance, forward diode, fuse and the final combined circuit.
 
-`tests/twenty_missions_test.py` checks every solution and rejects broken circuits.
+`tests/mission_course_test.py` checks every solution and rejects broken circuits.
 `tests/mission_progress_test.py` checks gated Next, unrestricted Back, clear-board
 transitions, progress retention and migration of old saves to mission-only navigation.
+
+Missions 21–24 add unequal series voltage sharing, unequal parallel branch currents,
+a switched LED and a final two-meter measurement check.

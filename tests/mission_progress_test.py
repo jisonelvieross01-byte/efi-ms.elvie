@@ -43,7 +43,7 @@ with sync_playwright() as p:
  assert page.evaluate('state.components.length===0 && state.wires.length===0')
  # Validate all ten real solutions, advancing with the same teacher/student guard.
  page.locator('#teacher').click()
- for i in range(1,20):
+ for i in range(1,24):
   assert page.evaluate('mission')==i
   assert page.locator('#nextMission').is_disabled()
   page.evaluate('state=solutionCircuit(mission);running=true;changed()')
@@ -54,7 +54,7 @@ with sync_playwright() as p:
   assert page.evaluate('state.components.length===0 && state.wires.length===0')
   assert page.locator('#missionNext').is_disabled()
  assert page.evaluate('mission')==0
- assert page.evaluate('classroom.completed.length')==20
+ assert page.evaluate('classroom.completed.length')==24
  # Back is always enabled, including unfinished tasks; the first boundary is a safe no-op.
  assert page.locator('#missionBack').is_enabled()
  page.locator('#missionBack').click();assert page.evaluate('mission')==0
@@ -66,11 +66,11 @@ with sync_playwright() as p:
  assert page.locator('#modes button').count()==1
  assert page.locator('#modes button').inner_text()=='Mission'
  # Saved legacy modes migrate to missions; later mission indices survive reload.
- page.evaluate('mission=19;persist();const saved=JSON.parse(localStorage.getItem("circuitlab-v1"));saved.mode="challenge";localStorage.setItem("circuitlab-v1",JSON.stringify(saved))')
- page.reload();assert page.evaluate('mode')=='missions';assert page.evaluate('mission')==19
+ page.evaluate('mission=23;persist();const saved=JSON.parse(localStorage.getItem("circuitlab-v1"));saved.mode="challenge";localStorage.setItem("circuitlab-v1",JSON.stringify(saved))')
+ page.reload();assert page.evaluate('mode')=='missions';assert page.evaluate('mission')==23
  assert page.locator('#missionBack').is_enabled()
  assert page.locator('#missionNext').is_disabled()
  assert not errors,errors
  browser.close()
 server.shutdown()
-print('PASS: incomplete missions lock student/teacher Next; hints do not unlock; pause/edits/history handled; all twenty verified transitions clear board and preserve scores/progress; Back, mission-only navigation and legacy save migration work.')
+print('PASS: incomplete missions lock student/teacher Next; hints do not unlock; pause/edits/history handled; all twenty-four verified transitions clear board and preserve scores/progress; Back, mission-only navigation and legacy save migration work.')

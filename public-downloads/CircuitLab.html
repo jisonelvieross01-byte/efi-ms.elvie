@@ -395,7 +395,11 @@ const missions=[
  ['Try a thermistor','6 V battery + 20 Ω lamp + 100 Ω thermistor in series.','6 V ÷ 120 Ω = 0.050 A.','thermistortarget'],
  ['Turn a diode','6 V battery + 100 Ω resistor + forward diode.','The simplified diode model gives about 0.0525 A.','forwarddiode'],
  ['Add a fuse','6 V battery + 1 Ω fuse + 100 Ω resistor in series.','About 0.0594 A flows, below the demonstration fuse rating.','fusepath'],
- ['Final circuit','Use a switch, variable resistor, lamp and both meters; set 0.020–0.040 A.','Use series current measurement, parallel voltage measurement and a closed switch.','master']
+ ['Full toolkit','Use a switch, variable resistor, lamp and both meters; set 0.020–0.040 A.','Use series current measurement, parallel voltage measurement and a closed switch.','master'],
+ ['Share it unequally','6 V + 100 Ω and 200 Ω in series; measure across 200 Ω.','The current is 0.020 A; the 200 Ω resistor has 4 V.','unequalseries'],
+ ['Unequal branches','6 V + 100 Ω and 200 Ω in parallel.','The branches carry 0.060 A and 0.030 A; the source supplies 0.090 A.','unequalparallel'],
+ ['Switch an LED','Light an LED with a closed switch and a 330 Ω resistor at 6 V.','A closed series switch gives about 12.69 mA; opening it stops the current.','ledswitch'],
+ ['Final check','6 V + 300 Ω resistor; add both meters correctly.','The series ammeter reads 0.020 A; the parallel voltmeter reads 6 V.','finalcheck']
 ];
 const detectives=[['A meter blocks the way','The lamp stays dark. Check the meter.','A voltmeter has infinite resistance. Replace the series voltmeter with an ammeter.','series-meter'],['A dangerous shortcut','The ammeter is across the battery. Fix it.','Never place an ammeter directly across a source. Put it in series with the load.','short-meter'],['The backwards LED','The LED stays dark. Fix its direction.','An LED conducts only from anode to cathode. Reconnect its anode towards the source’s + terminal and its cathode towards −. Rotation changes the drawing, not the attached wire ends.','reverse-led']];
 function notify(text){$('#toast').textContent=text;$('#toast').classList.add('show');clearTimeout(notify.t);notify.t=setTimeout(()=>$('#toast').classList.remove('show'),2600);}
@@ -580,13 +584,13 @@ function solutionCircuit(index){
  const add=(type,x,y,value)=>{const c={id:'guide'+(++id),type,x,y,rotation:0,value:value??PARTS[type].value,closed:type==='switch'};components.push(c);return c;};
  const join=(a,t,b,u,via=[])=>wires.push({id:'guide-wire'+wires.length,a:a.id+':'+t,b:b.id+':'+u,via});
  const source=add(index===12?'cell':'battery',200,380,index===12?3:6);source.rotation=90;
- const kinds=[['lamp'],['switch','lamp'],['ammeter','lamp'],['lamp'],['resistor','resistor'],['resistor'],['variable','lamp'],['resistor','led'],['ldr','lamp'],['switch','ammeter','lamp'],['ammeter','resistor'],['ammeter','resistor'],['lamp'],['lamp','lamp'],['lamp'],['ldr','lamp'],['thermistor','lamp'],['resistor','diode'],['fuse','resistor'],['switch','variable','ammeter','lamp']][index];
- const chain=kinds.map((type,i)=>add(type,kinds.length===1?650:350+i*600/(kinds.length-1),180,type==='resistor'?(index===7?330:index===11?200:100):type==='variable'?200:type==='ldr'&&index===15?180:undefined));
+ const kinds=[['lamp'],['switch','lamp'],['ammeter','lamp'],['lamp'],['resistor','resistor'],['resistor'],['variable','lamp'],['resistor','led'],['ldr','lamp'],['switch','ammeter','lamp'],['ammeter','resistor'],['ammeter','resistor'],['lamp'],['lamp','lamp'],['lamp'],['ldr','lamp'],['thermistor','lamp'],['resistor','diode'],['fuse','resistor'],['switch','variable','ammeter','lamp'],['resistor','resistor'],['resistor'],['switch','resistor','led'],['ammeter','resistor']][index];
+ const chain=kinds.map((type,i)=>add(type,kinds.length===1?650:350+i*600/(kinds.length-1),180,type==='resistor'?(index===7||index===22?330:index===11||index===20&&i===1?200:index===23?300:100):type==='variable'?200:type==='ldr'&&index===15?180:undefined));
  join(source,0,chain[0],0,[[200,180]]);
  for(let i=1;i<chain.length;i++)join(chain[i-1],1,chain[i],0);
  join(chain.at(-1),1,source,1,[[1080,180],[1080,620],[200,620]]);
- if(index===5||index===14){const second=add(index===14?'lamp':'resistor',650,420,index===14?20:100);join(chain[0],0,second,0,[[500,180],[500,420]]);join(chain[0],1,second,1,[[800,180],[800,420]]);}
- if(index===3||index===9||index===19){const lamp=chain.at(-1),meter=add('voltmeter',lamp.x,420);join(lamp,0,meter,0);join(lamp,1,meter,1);}
+ if(index===5||index===14||index===21){const second=add(index===14?'lamp':'resistor',650,420,index===14?20:index===21?200:100);join(chain[0],0,second,0,[[500,180],[500,420]]);join(chain[0],1,second,1,[[800,180],[800,420]]);}
+ if(index===3||index===9||index===19||index===20||index===23){const lamp=chain.at(-1),meter=add('voltmeter',lamp.x,420);join(lamp,0,meter,0);join(lamp,1,meter,1);}
  return {components,wires};
 }
 function guideEndpoint(network,key){const [id,t]=key.split(':');return terminal(network.components.find(c=>c.id===id),+t);}
@@ -658,6 +662,10 @@ function checkMission(index){if(!result?.ok||!result.active)return false;const r
  case'thermistortarget':return six&&lamps.some(l=>close(l.value,20)&&close(mag(l),.05)&&types('thermistor').some(c=>close(c.value,100)&&seriesWith(c,l)));
  case'forwarddiode':return six&&types('diode').some(d=>r[d.id].current>0&&close(r[d.id].current,5.3/101)&&res.some(c=>close(c.value,100)&&seriesWith(c,d)));
  case'fusepath':return six&&types('fuse').some(f=>close(f.value,1)&&close(mag(f),6/101)&&res.some(c=>close(c.value,100)&&seriesWith(c,f)));
+ case'unequalseries':return six&&res.some(b=>close(b.value,200)&&close(mag(b),.02)&&res.some(a=>close(a.value,100)&&seriesWith(a,b))&&types('voltmeter').some(v=>parallel(v,b)&&close(Math.abs(r[v.id].voltage),4)));
+ case'unequalparallel':return six&&res.some(a=>close(a.value,100)&&close(mag(a),.06)&&res.some(b=>close(b.value,200)&&close(mag(b),.03)&&parallel(a,b)));
+ case'ledswitch':return six&&types('led').some(l=>r[l.id].current>=.005&&r[l.id].current<=.02&&res.some(c=>close(c.value,330)&&seriesWith(c,l))&&switches.some(c=>seriesWith(c,l)));
+ case'finalcheck':return measured(300,.02)&&res.some(c=>close(c.value,300)&&types('voltmeter').some(v=>parallel(v,c)&&close(Math.abs(r[v.id].voltage),6)));
  case'master':return controlled&&amp&&volt&&lamps.some(l=>mag(l)>=.02&&mag(l)<=.04&&types('variable').some(v=>seriesWith(v,l)));
  default:return false;}
 }
