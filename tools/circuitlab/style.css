@@ -141,3 +141,12 @@ dialog::backdrop{background:#0f2a3a88;backdrop-filter:blur(3px)}
 @media(max-width:800px){main{grid-template-columns:130px 1fr}.readings{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}.readings .section-title{grid-column:1/-1}.toolbar button{padding:6px}.toolbar #selectTool,.toolbar #wireTool{font-size:12px}#empty{font-size:18px}.scoreboard input{width:100px}#modes button{font-size:12px;padding:6px 4px}}
 @media(max-width:600px){main{grid-template-columns:minmax(0,1fr)}.library{padding:8px 10px}.library .section-title{margin-bottom:6px}#parts{display:flex;overflow-x:auto;gap:6px;padding-bottom:4px;scroll-snap-type:x proximity}#parts button{flex:0 0 72px;min-height:66px;scroll-snap-align:start}.readings{grid-template-columns:1fr}h1{font-size:18px}.brandmark{width:34px;height:34px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* Physical parts keep the diagram's terminal coordinates and large touch targets. */
+.physical-part{pointer-events:none}
+#board .part.selected .physical-part{filter:brightness(1.06)}
+.symbol-reference svg{display:block;width:100%;height:62px;color:var(--navy)}
+.view-tools button{min-height:40px}
+#board .part:active{cursor:grabbing}
+#board .part .part-label{pointer-events:none}
+@media(max-width:600px){.toolbar{justify-content:flex-start}.toolbar .view-tools{margin-left:auto}.toolbar button{min-height:40px}}

@@ -1,4 +1,6 @@
 'use strict';
+let componentView='physical';
+try{componentView=localStorage.getItem('circuitlab-view')==='symbols'?'symbols':'physical';}catch{}
 const $=s=>document.querySelector(s), NS='http://www.w3.org/2000/svg';
 let state={components:[],wires:[]},selected=null,armed=null,placing=null,tool='select',running=false,result=null,mode='build',mission=0,detective=0,history=[],future=[],serial=0,drag=null,example='',sound=false;
 let classroom={names:['Pair 1','Pair 2'],scores:[0,0],completed:[],awarded:[]},remaining=180,timerOn=false;
@@ -45,18 +47,25 @@ function wirePath(w){const pts=routes.get(w.id)||[];return pts.map((p,i)=>(i?'L'
 function wirePoints(w){return routes.get(w.id)||[];}
 function svgNode(tag,attrs={}){const e=document.createElementNS(NS,tag);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,v);return e;}
 function fmt(n,unit){return n===null||n===undefined||!Number.isFinite(n)?'Undefined':`${Math.abs(n)<1e-10?0:+n.toPrecision(4)} ${unit}`;}
+const physicalDefinitionNode=svgNode('g');physicalDefinitionNode.innerHTML=physicalDefs();$('#board defs').append(...physicalDefinitionNode.children);
+function setComponentView(view){componentView=view;try{localStorage.setItem('circuitlab-view',view);}catch{}renderBoard();}
+$('#physicalView').onclick=()=>setComponentView('physical');$('#symbolView').onclick=()=>setComponentView('symbols');
 function renderBoard(){
  routeAll();const wg=$('#wires'),cg=$('#components');wg.replaceChildren();cg.replaceChildren();
  for(const w of state.wires){const g=svgNode('g',{'data-wire':w.id});g.append(svgNode('path',{d:wirePath(w),class:'wire-hit'}),svgNode('path',{d:wirePath(w),class:'wire'+(selected===w.id?' selected':'')}));wg.append(g);}
  for(const c of state.components){const g=svgNode('g',{transform:`translate(${c.x},${c.y})`,'data-part':c.id,class:'part'+(selected===c.id?' selected':'')});
   if(selected===c.id)g.append(svgNode('rect',{x:-66,y:-65,width:132,height:120,rx:12,class:'selection'}));
+  g.append(svgNode('rect',{x:-42,y:-40,width:84,height:80,fill:'transparent',class:'part-hit'}));
   const sym=svgNode('g',{transform:`rotate(${c.rotation||0})`});
-  const rr=result?.ok?result.readings[c.id]:null;if(c.type==='lamp'&&rr&&rr.power>1e-8||c.type==='led'&&rr&&rr.current>1e-5){sym.append(svgNode('circle',{r:c.type==='lamp'?28:23,fill:'#ffb632',opacity:Math.min(.85,Math.max(.1,(rr.power||0)/1.8)),stroke:'none'}));}
-  const shape=svgNode('g');shape.innerHTML=symbol(c.type,c.closed);sym.append(shape);g.append(sym);
+  const rr=result?.ok?result.readings[c.id]:null;
+  const shape=svgNode('g');shape.innerHTML=componentView==='physical'?physicalPart(c,rr):symbol(c.type,c.closed);
+  if(componentView==='symbols'&&rr&&(c.type==='lamp'&&rr.power>1e-8||c.type==='led'&&rr.current>1e-5))sym.append(svgNode('circle',{r:28,fill:'var(--orange)',opacity:Math.min(.85,Math.max(.1,(rr.power||0)/1.8)),stroke:'none'}));
+  sym.append(shape);g.append(sym);
   const label=svgNode('text',{y:48,'text-anchor':'middle',class:'part-label'});label.textContent=PARTS[c.type].name+(c.value!==undefined?' · '+c.value+' '+PARTS[c.type].unit:'');g.append(label);
   for(let t=0;t<2;t++){const p=terminal(c,t);const hit=svgNode('circle',{cx:p.x-c.x,cy:p.y-c.y,r:24,fill:'transparent','data-terminal':c.id+':'+t});g.append(hit);g.append(svgNode('circle',{cx:p.x-c.x,cy:p.y-c.y,r:7,class:'terminal'+(armed===c.id+':'+t?' armed':''),'data-terminal':c.id+':'+t}));}
   cg.append(g);
  }
+ for(const [id,view] of [['physicalView','physical'],['symbolView','symbols']]){const active=componentView===view;$('#'+id).classList.toggle('active',active);$('#'+id).setAttribute('aria-pressed',active);}
  $('#empty').hidden=!!state.components.length;
  $('#selectTool').classList.toggle('active',tool==='select'&&!placing);$('#wireTool').classList.toggle('active',tool==='wire');
  document.querySelectorAll('#parts button').forEach(b=>b.classList.toggle('active',b.dataset.type===placing));
@@ -74,7 +83,7 @@ function renderReadings(){
 }
 function renderInspector(){const box=$('#inspector');box.replaceChildren();const c=state.components.find(c=>c.id===selected);
  if(!c){box.innerHTML='<h3>Settings</h3><p>Tap a part to change it.</p>';return;}
- const p=PARTS[c.type],h=document.createElement('h3');h.textContent=p.name;const info=document.createElement('p');info.textContent=p.info;box.append(h,info);
+ const p=PARTS[c.type],h=document.createElement('h3');h.textContent=p.name;const info=document.createElement('p');info.textContent=p.info;box.append(h);const ref=document.createElement('details');const title=document.createElement('summary');title.textContent='Circuit symbol';ref.append(title);const diagram=document.createElement('div');diagram.className='symbol-reference';diagram.innerHTML=icon(c.type);ref.append(diagram,info);box.append(ref);
  if(p.range){const l=document.createElement('label');l.textContent=`${c.type==='cell'||c.type==='battery'||c.type==='supply'?'Voltage':'Resistance'}: ${c.value} ${p.unit}`;const input=document.createElement('input');input.type='range';[input.min,input.max,input.step]=p.range;input.value=c.value;input.setAttribute('aria-label',p.name+' '+p.unit);input.onpointerdown=()=>checkpoint();input.onkeydown=e=>{if(e.key.startsWith('Arrow'))checkpoint();};input.oninput=()=>{c.value=+input.value;l.firstChild.textContent=`${p.unit==='V'?'Voltage':'Resistance'}: ${c.value} ${p.unit}`;result=running?CircuitSolver.solve(state):null;renderBoard();validate();persist();};input.onchange=changed;l.append(input);box.append(l);}
  if(c.type==='switch'){const b=document.createElement('button');b.textContent=c.closed?'On · tap to turn off':'Off · tap to turn on';b.onclick=()=>{checkpoint();c.closed=!c.closed;changed();};box.append(b);}
  if(c.type==='fuse'){const b=document.createElement('button');b.textContent=c.blown?'Open fuse · restore':'Open fuse manually';b.onclick=()=>{checkpoint();c.blown=!c.blown;changed();};box.append(b);}

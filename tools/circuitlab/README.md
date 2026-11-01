@@ -120,3 +120,15 @@ real touch/mouse wiring, drag, rotate, delete, history, every example, missions,
 sliders, switches, teacher controls, faulty circuits, scores, local persistence,
 quiz and responsive layout. No test tools are needed to use the application.
 See `../../guides/examples.html` for expected readings and `../../guides/classroom.html` for a 45-minute lesson. Run automated test commands from the repository root.
+
+## Component views
+
+Placed components use a shaded 3D-style SVG view by default. The palette keeps IEC
+symbols; choose Symbols on the board to compare circuit diagrams. The preference
+is saved locally. The inspector’s Circuit symbol section shows the matching symbol.
+Meter displays and lamp/LED glow use solver results and clear while paused. These
+are depth illustrations on the existing flat workbench, with unchanged terminals,
+rotation controls and DC models; there is no 3D camera or WebGL dependency.
+
+Run `python tests/physical_parts_test.py` from the repository root for appearance,
+view persistence, drop behavior, readings and 375/960/1920 layout checks.

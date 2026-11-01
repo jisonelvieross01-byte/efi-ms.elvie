@@ -141,13 +141,22 @@ dialog::backdrop{background:#0f2a3a88;backdrop-filter:blur(3px)}
 @media(max-width:800px){main{grid-template-columns:130px 1fr}.readings{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}.readings .section-title{grid-column:1/-1}.toolbar button{padding:6px}.toolbar #selectTool,.toolbar #wireTool{font-size:12px}#empty{font-size:18px}.scoreboard input{width:100px}#modes button{font-size:12px;padding:6px 4px}}
 @media(max-width:600px){main{grid-template-columns:minmax(0,1fr)}.library{padding:8px 10px}.library .section-title{margin-bottom:6px}#parts{display:flex;overflow-x:auto;gap:6px;padding-bottom:4px;scroll-snap-type:x proximity}#parts button{flex:0 0 72px;min-height:66px;scroll-snap-align:start}.readings{grid-template-columns:1fr}h1{font-size:18px}.brandmark{width:34px;height:34px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* Physical parts keep the diagram's terminal coordinates and large touch targets. */
+.physical-part{pointer-events:none}
+#board .part.selected .physical-part{filter:brightness(1.06)}
+.symbol-reference svg{display:block;width:100%;height:62px;color:var(--navy)}
+.view-tools button{min-height:40px}
+#board .part:active{cursor:grabbing}
+#board .part .part-label{pointer-events:none}
+@media(max-width:600px){.toolbar{justify-content:flex-start}.toolbar .view-tools{margin-left:auto}.toolbar button{min-height:40px}}
 </style></head><body>
 <header><div class="brand"><span class="brandmark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span><div><h1>CircuitLab</h1><p>Build. Connect. Discover.</p></div></div>
 <nav aria-label="Learning modes" id="modes"><button data-mode="explorer"><span aria-hidden="true">◎</span> Symbols</button><button data-mode="build" class="active"><span aria-hidden="true">✚</span> Free build</button><button data-mode="missions"><span aria-hidden="true">★</span> Missions</button><button data-mode="detective"><span aria-hidden="true">⌕</span> Detective</button><button data-mode="challenge"><span aria-hidden="true">⚑</span> Challenge</button></nav>
 <div class="header-actions"><button id="sound" class="icon" aria-pressed="false" aria-label="Sound off" title="Sound">🔇</button><button id="teacher" class="icon wide" aria-pressed="false" title="Teacher tools">Teacher</button><button id="fullscreen" class="icon" aria-label="Fullscreen" title="Fullscreen">⛶</button></div></header>
 <main><aside class="library"><div class="section-title"><h2>Parts</h2><span>Tap or drag</span></div><div id="parts"></div></aside>
-<section class="middle"><div id="activity" class="activity"></div><div class="toolbar"><div class="toolgroup"><button id="selectTool" class="active" title="Move parts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l14 8-6 2-2 6z"/></svg>Move</button><button id="wireTool" title="Draw wires"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/><path d="M7 19h5V5h5"/></svg>Wire</button></div><div class="toolgroup"><button id="undo" title="Undo (Ctrl+Z)" aria-label="Undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button><button id="redo" title="Redo" aria-label="Redo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5M20 9H9a5 5 0 0 0 0 10h3"/></svg></button><button id="rotate" title="Rotate (R)" aria-label="Rotate"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-3-6.2M20 4v5h-5"/></svg></button><button id="delete" title="Delete selected" aria-label="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button><button id="clear" title="Clear board">Clear</button></div></div><div class="board-wrap"><svg id="board" viewBox="0 0 1200 760" role="img" aria-label="Interactive circuit workspace" tabindex="0"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="0" cy="0" r="1" fill="#cfdbe4"/></pattern></defs><rect width="1200" height="760" fill="url(#grid)"/><g id="wires"></g><g id="components"></g><g id="flows" pointer-events="none"></g></svg><div id="empty">Start here<small>Pick a part, or load an example below.</small></div><div id="boardHint">Tap two dots to join them</div></div><div class="bottom-bar"><label><span class="sr-only">Example</span><select id="examples"><option value="">Load an example…</option><option value="single">One lamp</option><option value="series">Series resistors</option><option value="parallel">Parallel resistors</option><option value="meters">Meters</option><option value="led">LED + resistor</option></select></label><button id="reset">Reset</button><span id="saveStatus">Saved</span></div><section id="explorerPanel" hidden></section></section>
-<aside class="readings"><div class="section-title"><h2>Results</h2><span id="runBadge">Paused</span></div><div class="run-controls"><button id="run" class="primary">▶ Run</button><button id="pause">❚❚ Pause</button></div><label class="flow-label">Arrows<select id="flow"><option value="conventional">Current (+ → −)</option><option value="electron">Electrons (− → +)</option><option value="none">Off</option></select></label><div id="feedback" role="status" aria-live="polite"></div><section id="inspector"></section><section class="meter-panel"><h3>Readings</h3><div id="measurements"></div></section><details><summary>Formulas</summary><p><b>V = IR</b> · volts = amps × ohms</p><p><b>P = VI</b> · power in watts</p><p><b>Q = It</b> · charge = current × time</p><p>Series: same current.<br>Parallel: same voltage.</p></details><details><summary>Help</summary><p>Tap a part, then tap the board. Tap two dots to wire them. Double-tap a switch to flip it.</p><p>Keys: R rotate · Delete remove · Ctrl+Z undo.</p><p>Orange = current. Blue = electrons. A minus sign means the opposite direction.</p><p>Model: ideal DC only. No AC or charging.</p></details></aside>
+<section class="middle"><div id="activity" class="activity"></div><div class="toolbar"><div class="toolgroup"><button id="selectTool" class="active" title="Move parts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l14 8-6 2-2 6z"/></svg>Move</button><button id="wireTool" title="Draw wires"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/><path d="M7 19h5V5h5"/></svg>Wire</button></div><div class="toolgroup view-tools" role="group" aria-label="Component view"><button id="physicalView" class="active" aria-pressed="true">3D parts</button><button id="symbolView" aria-pressed="false">Symbols</button></div><div class="toolgroup"><button id="undo" title="Undo (Ctrl+Z)" aria-label="Undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button><button id="redo" title="Redo" aria-label="Redo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5M20 9H9a5 5 0 0 0 0 10h3"/></svg></button><button id="rotate" title="Rotate (R)" aria-label="Rotate"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-3-6.2M20 4v5h-5"/></svg></button><button id="delete" title="Delete selected" aria-label="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button><button id="clear" title="Clear board">Clear</button></div></div><div class="board-wrap"><svg id="board" viewBox="0 0 1200 760" role="img" aria-label="Interactive circuit workspace" tabindex="0"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="0" cy="0" r="1" fill="#cfdbe4"/></pattern></defs><rect width="1200" height="760" fill="url(#grid)"/><g id="wires"></g><g id="components"></g><g id="flows" pointer-events="none"></g></svg><div id="empty">Start here<small>Pick a part, or load an example below.</small></div><div id="boardHint">Tap two dots to join them</div></div><div class="bottom-bar"><label><span class="sr-only">Example</span><select id="examples"><option value="">Load an example…</option><option value="single">One lamp</option><option value="series">Series resistors</option><option value="parallel">Parallel resistors</option><option value="meters">Meters</option><option value="led">LED + resistor</option></select></label><button id="reset">Reset</button><span id="saveStatus">Saved</span></div><section id="explorerPanel" hidden></section></section>
+<aside class="readings"><div class="section-title"><h2>Results</h2><span id="runBadge">Paused</span></div><div class="run-controls"><button id="run" class="primary">▶ Run</button><button id="pause">❚❚ Pause</button></div><label class="flow-label">Arrows<select id="flow"><option value="conventional">Current (+ → −)</option><option value="electron">Electrons (− → +)</option><option value="none">Off</option></select></label><div id="feedback" role="status" aria-live="polite"></div><section id="inspector"></section><section class="meter-panel"><h3>Readings</h3><div id="measurements"></div></section><details><summary>Formulas</summary><p><b>V = IR</b> · volts = amps × ohms</p><p><b>P = VI</b> · power in watts</p><p><b>Q = It</b> · charge = current × time</p><p>Series: same current.<br>Parallel: same voltage.</p></details><details><summary>Help</summary><p>3D parts show real objects; Symbols shows circuit diagrams.</p><p>Tap a part, then tap the board. Tap two dots to wire them. Double-tap a switch to flip it.</p><p>Keys: R rotate · Delete remove · Ctrl+Z undo.</p><p>Orange = current. Blue = electrons. A minus sign means the opposite direction.</p><p>Model: ideal DC only. No AC or charging.</p></details></aside>
 </main><section id="teacherPanel" hidden><h2>Teacher</h2><label>Minutes<input id="minutes" type="number" min="1" max="60" value="3"></label><strong id="timer">03:00</strong><button id="timerStart">Start</button><button id="timerPause">Pause</button><button id="timerReset">Reset</button><button id="nextMission">Next mission</button><button id="reveal">Show answer</button><p id="explanation" hidden></p></section><dialog id="symbolDialog"><button id="closeDialog" aria-label="Close">✕</button><div id="symbolDetail"></div></dialog><div id="toast" role="status"></div>
 <script>/* CircuitLab DC engine. Modified nodal analysis, partial-pivot Gaussian elimination.
    No shunt conductances or made-up readings: each conductive island has its own reference. */
@@ -273,7 +282,56 @@ function symbol(type,closed=false){
  return '<g fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">'+body+'</g>';
 }
 function icon(type){return '<svg viewBox="-60 -55 120 100" aria-hidden="true">'+symbol(type)+'</svg>'}
+
+// Lightweight SVG depth rendering: decorative geometry only; terminals and solver stay planar.
+function physicalDefs(){return `
+ <linearGradient id="part-metal" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff"/><stop offset=".35" stop-color="var(--line)"/><stop offset=".65" stop-color="#fff"/><stop offset="1" stop-color="var(--muted)"/></linearGradient>
+ <linearGradient id="part-teal" x1="0" y1="0" x2=".3" y2="1"><stop stop-color="var(--teal)"/><stop offset="1" stop-color="var(--navy)"/></linearGradient>
+ <linearGradient id="part-dark" x1="0" y1="0" x2="0" y2="1"><stop stop-color="var(--muted)"/><stop offset=".4" stop-color="var(--navy)"/><stop offset="1" stop-color="var(--ink, var(--navy))"/></linearGradient>
+ <linearGradient id="part-glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff" stop-opacity=".95"/><stop offset=".5" stop-color="var(--line)" stop-opacity=".4"/><stop offset="1" stop-color="var(--teal)" stop-opacity=".35"/></linearGradient>
+ <radialGradient id="part-light"><stop stop-color="#fff"/><stop offset=".35" stop-color="var(--orange)" stop-opacity=".9"/><stop offset="1" stop-color="var(--orange)" stop-opacity="0"/></radialGradient>
+ <filter id="part-shadow" x="-40%" y="-50%" width="190%" height="220%"><feDropShadow dx="2" dy="5" stdDeviation="2.5" flood-color="var(--navy)" flood-opacity=".22"/></filter>`;}
+function physicalPart(c,reading){
+ const metal='url(#part-metal)',teal='url(#part-teal)',dark='url(#part-dark)',glass='url(#part-glass)';
+ const rect=(x,y,w,h,fill,rx=5)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${fill}"/>`;
+ const text=(value,x=0,y=5,size=13,fill='#fff')=>`<text x="${x}" y="${y}" text-anchor="middle" font-size="${size}" font-weight="700" style="fill:${fill}" stroke="none">${value}</text>`;
+ const path=(d,stroke='var(--muted)',width=3)=>`<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`;
+ const circle=(x,y,r,fill)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${fill}"/>`;
+ const leads=path('M-50 0H-26 M26 0H50','var(--muted)',5)+path('M-50 -1H-26 M26 -1H50','#fff',1);
+ const bevel=(w=70,h=42)=>rect(-w/2,-h/2+5,w,h,dark,7)+rect(-w/2,-h/2,w,h,teal,7)+path(`M${-w/2+8} ${-h/2+3}H${w/2-8}`,'#fff',1);
+ let body='',glow='';
+ switch(c.type){
+ case 'cell':case 'battery':
+  body=rect(-34,-18,68,36,dark,10)+rect(-34,-18,24,36,teal,7)+circle(-32,0,5,metal)+rect(-40,-6,6,12,metal,2)+rect(33,-14,5,28,metal,2)+path('M-23 -13H23','#fff',1)+text('+',-22,6,17)+text('−',24,6,16)+text(c.type==='cell'?'CELL':'DC',6,5,10);break;
+ case 'supply':body=bevel(76,50)+rect(-27,-17,54,22,dark,3)+text(Number.isFinite(+c.value)?c.value+' V':'DC',0,-2,14,'var(--orange)')+circle(-19,17,5,metal)+circle(19,17,5,metal)+text('+',-32,22,10)+text('−',32,22,10);break;
+ case 'resistor':body=rect(-30,-12,60,29,dark,9)+rect(-30,-16,60,29,metal,9)+rect(-21,-16,42,29,teal,3)+text('Ω',0,5,19)+path('M-16 -12H16','#fff',1);break;
+ case 'variable':body=bevel(64,44)+circle(0,-1,19,metal)+circle(0,-1,14,dark)+`<g transform="rotate(${Math.min(1,Math.max(0,(c.value-1)/999))*240-120} 0 -1)">${path('M0 -2V-12','var(--orange)',3)}</g>`+text('Ω',25,15,10);break;
+ case 'lamp':{
+  const power=reading?.power||0,level=Math.min(1,Math.max(0,power/1.8));
+  if(power>1e-8)glow=`<g class="part-glow" opacity="${level}">${circle(0,-6,42,'url(#part-light)')}</g>`;
+  body=rect(-33,11,66,22,dark,7)+rect(-29,9,58,15,teal,6)+rect(-12,7,24,15,metal,3)+circle(0,-7,23,glass)+path('M-10 11L-7 -5L-3 -9L1 -5L5 -9L9 -5L11 11',power>1e-8?'var(--orange)':'var(--muted)',2)+path('M-14 -18Q-19 -12-17 -4','#fff',3);break;}
+ case 'ammeter':case 'voltmeter':{
+  const unit=c.type==='ammeter'?'A':'V',v=c.type==='ammeter'?reading?.current:reading?.voltage;
+  const value=Number.isFinite(v)?(+v.toPrecision(3))+'':'—';
+  body=bevel(76,52)+rect(-29,-19,58,26,dark,4)+text(value,0,0,14,'var(--orange)')+text(unit,0,23,13)+circle(-23,18,4,metal)+circle(23,18,4,metal);break;}
+ case 'switch':body=bevel(72,40)+circle(-23,0,7,metal)+circle(23,0,7,metal)+path(c.closed?'M-23 0H23':'M-23 0L13 -26','var(--orange)',7)+circle(-23,0,4,dark)+circle(c.closed?23:13,c.closed?0:-26,5,metal);break;
+ case 'fuse':body=rect(-32,-13,64,30,dark,7)+rect(-31,-17,62,29,glass,7)+rect(-34,-17,12,29,metal,3)+rect(22,-17,12,29,metal,3)+path(c.blown?'M-22 -3H-7 M8 -3H22':'M-22 -3L-10 -7L0 0L10 -7L22 -3','var(--orange)',2);break;
+ case 'capacitor':body=rect(-24,-23,48,50,dark,8)+rect(-24,-27,48,47,teal,8)+`<ellipse cx="0" cy="-24" rx="23" ry="7" fill="${metal}"/>`+path('M-13 -24H13 M0 -28V-20','var(--muted)',1)+rect(-21,-14,7,33,metal,2)+text('−',-17,8,12,'var(--navy)')+text('C',6,10,18);break;
+ case 'diode':body=rect(-30,-12,60,29,dark,10)+rect(15,-12,7,29,metal,1)+path('M-20 -8H9','#fff',1)+text('A',-37,-14,9,'var(--navy)')+text('K',32,-14,9,'var(--navy)');break;
+ case 'led':{
+  const lit=(reading?.current||0)>1e-5;
+  if(lit)glow=`<g class="part-glow" opacity="${Math.min(1,reading.current/.02)}">${circle(0,-7,40,'url(#part-light)')}</g>`;
+  body=rect(-29,15,58,14,dark,7)+rect(-25,11,50,13,teal,5)+`<path d="M-20 13V-5A20 20 0 0 1 20 -5V13Z" fill="${lit?'var(--orange)':glass}"/>`+rect(-23,9,46,6,metal,3)+path('M-10 -12Q-14 -8-14 2','#fff',3)+path('M-7 10V0H5V10','var(--muted)',2)+text('+',-35,-13,12,'var(--navy)')+text('−',35,-13,12,'var(--navy)');break;}
+ case 'thermistor':body=circle(1,4,24,dark)+circle(0,-1,24,teal)+path('M-12 -15Q-18 -8-16 -1','#fff',2)+text('NTC',0,5,12);break;
+ case 'ldr':body=circle(1,4,25,dark)+circle(0,0,25,metal)+circle(0,-1,21,teal)+path('M-12 -12H12V-6H-12V0H12V6H-12V12H12','var(--orange)',2)+path('M-18 -24L-27 -33 M-5 -28L-9 -39','var(--orange)',2);break;
+ case 'junction':body=path('M-38 0H38 M0 -23V23','var(--muted)',12)+path('M-38 -2H38 M-2 -23V23','var(--line)',3)+circle(0,0,12,metal)+circle(0,0,6,teal);break;
+ case 'wire':body=path('M-44 0H44','var(--navy)',9)+path('M-44 -2H44','var(--teal)',4);break;
+ }
+ return `<g class="physical-part" data-renderer="physical" data-type="${c.type}">${glow}<g filter="url(#part-shadow)">${leads}${body}</g></g>`;
+}
 </script><script>'use strict';
+let componentView='physical';
+try{componentView=localStorage.getItem('circuitlab-view')==='symbols'?'symbols':'physical';}catch{}
 const $=s=>document.querySelector(s), NS='http://www.w3.org/2000/svg';
 let state={components:[],wires:[]},selected=null,armed=null,placing=null,tool='select',running=false,result=null,mode='build',mission=0,detective=0,history=[],future=[],serial=0,drag=null,example='',sound=false;
 let classroom={names:['Pair 1','Pair 2'],scores:[0,0],completed:[],awarded:[]},remaining=180,timerOn=false;
@@ -320,18 +378,25 @@ function wirePath(w){const pts=routes.get(w.id)||[];return pts.map((p,i)=>(i?'L'
 function wirePoints(w){return routes.get(w.id)||[];}
 function svgNode(tag,attrs={}){const e=document.createElementNS(NS,tag);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,v);return e;}
 function fmt(n,unit){return n===null||n===undefined||!Number.isFinite(n)?'Undefined':`${Math.abs(n)<1e-10?0:+n.toPrecision(4)} ${unit}`;}
+const physicalDefinitionNode=svgNode('g');physicalDefinitionNode.innerHTML=physicalDefs();$('#board defs').append(...physicalDefinitionNode.children);
+function setComponentView(view){componentView=view;try{localStorage.setItem('circuitlab-view',view);}catch{}renderBoard();}
+$('#physicalView').onclick=()=>setComponentView('physical');$('#symbolView').onclick=()=>setComponentView('symbols');
 function renderBoard(){
  routeAll();const wg=$('#wires'),cg=$('#components');wg.replaceChildren();cg.replaceChildren();
  for(const w of state.wires){const g=svgNode('g',{'data-wire':w.id});g.append(svgNode('path',{d:wirePath(w),class:'wire-hit'}),svgNode('path',{d:wirePath(w),class:'wire'+(selected===w.id?' selected':'')}));wg.append(g);}
  for(const c of state.components){const g=svgNode('g',{transform:`translate(${c.x},${c.y})`,'data-part':c.id,class:'part'+(selected===c.id?' selected':'')});
   if(selected===c.id)g.append(svgNode('rect',{x:-66,y:-65,width:132,height:120,rx:12,class:'selection'}));
+  g.append(svgNode('rect',{x:-42,y:-40,width:84,height:80,fill:'transparent',class:'part-hit'}));
   const sym=svgNode('g',{transform:`rotate(${c.rotation||0})`});
-  const rr=result?.ok?result.readings[c.id]:null;if(c.type==='lamp'&&rr&&rr.power>1e-8||c.type==='led'&&rr&&rr.current>1e-5){sym.append(svgNode('circle',{r:c.type==='lamp'?28:23,fill:'#ffb632',opacity:Math.min(.85,Math.max(.1,(rr.power||0)/1.8)),stroke:'none'}));}
-  const shape=svgNode('g');shape.innerHTML=symbol(c.type,c.closed);sym.append(shape);g.append(sym);
+  const rr=result?.ok?result.readings[c.id]:null;
+  const shape=svgNode('g');shape.innerHTML=componentView==='physical'?physicalPart(c,rr):symbol(c.type,c.closed);
+  if(componentView==='symbols'&&rr&&(c.type==='lamp'&&rr.power>1e-8||c.type==='led'&&rr.current>1e-5))sym.append(svgNode('circle',{r:28,fill:'var(--orange)',opacity:Math.min(.85,Math.max(.1,(rr.power||0)/1.8)),stroke:'none'}));
+  sym.append(shape);g.append(sym);
   const label=svgNode('text',{y:48,'text-anchor':'middle',class:'part-label'});label.textContent=PARTS[c.type].name+(c.value!==undefined?' · '+c.value+' '+PARTS[c.type].unit:'');g.append(label);
   for(let t=0;t<2;t++){const p=terminal(c,t);const hit=svgNode('circle',{cx:p.x-c.x,cy:p.y-c.y,r:24,fill:'transparent','data-terminal':c.id+':'+t});g.append(hit);g.append(svgNode('circle',{cx:p.x-c.x,cy:p.y-c.y,r:7,class:'terminal'+(armed===c.id+':'+t?' armed':''),'data-terminal':c.id+':'+t}));}
   cg.append(g);
  }
+ for(const [id,view] of [['physicalView','physical'],['symbolView','symbols']]){const active=componentView===view;$('#'+id).classList.toggle('active',active);$('#'+id).setAttribute('aria-pressed',active);}
  $('#empty').hidden=!!state.components.length;
  $('#selectTool').classList.toggle('active',tool==='select'&&!placing);$('#wireTool').classList.toggle('active',tool==='wire');
  document.querySelectorAll('#parts button').forEach(b=>b.classList.toggle('active',b.dataset.type===placing));
@@ -349,7 +414,7 @@ function renderReadings(){
 }
 function renderInspector(){const box=$('#inspector');box.replaceChildren();const c=state.components.find(c=>c.id===selected);
  if(!c){box.innerHTML='<h3>Settings</h3><p>Tap a part to change it.</p>';return;}
- const p=PARTS[c.type],h=document.createElement('h3');h.textContent=p.name;const info=document.createElement('p');info.textContent=p.info;box.append(h,info);
+ const p=PARTS[c.type],h=document.createElement('h3');h.textContent=p.name;const info=document.createElement('p');info.textContent=p.info;box.append(h);const ref=document.createElement('details');const title=document.createElement('summary');title.textContent='Circuit symbol';ref.append(title);const diagram=document.createElement('div');diagram.className='symbol-reference';diagram.innerHTML=icon(c.type);ref.append(diagram,info);box.append(ref);
  if(p.range){const l=document.createElement('label');l.textContent=`${c.type==='cell'||c.type==='battery'||c.type==='supply'?'Voltage':'Resistance'}: ${c.value} ${p.unit}`;const input=document.createElement('input');input.type='range';[input.min,input.max,input.step]=p.range;input.value=c.value;input.setAttribute('aria-label',p.name+' '+p.unit);input.onpointerdown=()=>checkpoint();input.onkeydown=e=>{if(e.key.startsWith('Arrow'))checkpoint();};input.oninput=()=>{c.value=+input.value;l.firstChild.textContent=`${p.unit==='V'?'Voltage':'Resistance'}: ${c.value} ${p.unit}`;result=running?CircuitSolver.solve(state):null;renderBoard();validate();persist();};input.onchange=changed;l.append(input);box.append(l);}
  if(c.type==='switch'){const b=document.createElement('button');b.textContent=c.closed?'On · tap to turn off':'Off · tap to turn on';b.onclick=()=>{checkpoint();c.closed=!c.closed;changed();};box.append(b);}
  if(c.type==='fuse'){const b=document.createElement('button');b.textContent=c.blown?'Open fuse · restore':'Open fuse manually';b.onclick=()=>{checkpoint();c.blown=!c.blown;changed();};box.append(b);}
