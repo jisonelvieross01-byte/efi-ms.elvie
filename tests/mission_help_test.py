@@ -1,5 +1,6 @@
 """Verify every answer against the real solver/mission validator, and guides never solve for students."""
 from pathlib import Path
+from answer_gate_helpers import approve_answer
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
 from functools import partial
 from threading import Thread
@@ -25,7 +26,7 @@ with sync_playwright() as p:
   assert page.locator('#hintLayer [data-guide-part]').count()>=2
   assert page.locator('#hintLayer .guide-wire').count()==1
   assert page.locator('#empty').is_hidden()
-  page.locator('#showAnswer').tap()
+  approve_answer(page)
   assert page.locator('#answerDialog').is_visible()
   assert page.locator('#answerDrawing .guide-wire').count()==page.evaluate('solutionCircuit(mission).wires.length')
   assert page.locator('#answerConnections li').count()==page.evaluate('solutionCircuit(mission).wires.length')
@@ -35,7 +36,7 @@ with sync_playwright() as p:
   assert page.evaluate('JSON.stringify({state,serial,history,future,classroom,saved:localStorage.getItem("circuitlab-v1")})')==before
   assert 'verified' not in page.locator('#missionStatus').inner_text()
   assert page.locator('#missionNext').is_disabled()
-  page.evaluate('state=solutionCircuit(mission);running=true;changed()')
+  page.evaluate('state=solutionCircuit(mission);beginMission();running=true;changed()')
   assert page.locator('#missionNext').is_enabled()
   page.locator('#missionNext').click();assert page.locator('#hintLayer [data-guide-part]').count()==0
   assert page.evaluate('state.components.length===0 && state.wires.length===0')
@@ -46,12 +47,12 @@ with sync_playwright() as p:
  page.evaluate('mission=1;activity()');page.locator('#missionBack').click()
  assert page.locator('#hintLayer [data-guide-part]').count()==0
  assert page.locator('#missionBack').is_enabled()
- page.locator('#teacher').click();page.locator('#reveal').click()
+ page.locator('#teacher').click();approve_answer(page,'#reveal')
  assert page.locator('#answerDialog').is_visible();assert page.locator('#explanation').is_visible()
  page.locator('#closeAnswer').click()
  for width in [375,960,1920]:
   page.set_viewport_size({'width':width,'height':900})
-  page.locator('#showAnswer').click()
+  approve_answer(page)
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   assert page.locator('#closeAnswer').is_visible();page.locator('#closeAnswer').click()
  assert not errors,errors

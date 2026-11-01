@@ -187,3 +187,71 @@ dialog::backdrop{background:#0f2a3a88;backdrop-filter:blur(3px)}
 #modes button{min-height:40px;padding-inline:25px}
 #missionBack,#missionNext{min-height:40px}
 @media(max-width:1100px){#modes{order:initial;flex-basis:auto;margin-left:auto;margin-right:0}}
+
+/* Seven locally animated stick-figure prompts; teacher verification is manual. */
+#danceDialog{width:min(94vw,520px);max-width:520px;max-height:94dvh;overflow:auto;padding:20px}
+.dance-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.dance-kicker{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--teal)}
+#danceTitle{font-size:25px;margin-top:10px}
+#danceInstruction,#danceAlternative{font-size:14px;color:var(--muted);margin:8px 0}
+.dance-figure{display:block;width:min(100%,280px);height:220px;margin:10px auto;background:var(--teal-soft,#e6f6f4);border-radius:18px}
+.dance-body{fill:none;stroke:var(--navy);stroke-width:7;stroke-linecap:round;stroke-linejoin:round;transform-origin:160px 160px}
+.dance-head{transform-origin:160px 83px}
+.dance-head circle{fill:white;stroke:var(--teal)}
+.dance-head path{stroke-width:3}
+.dance-shadow{fill:var(--line);opacity:.7}
+.dance-left-arm,.dance-right-arm{transform-origin:160px 103px}
+.dance-left-leg,.dance-right-leg{transform-origin:160px 155px}
+.dance-left-arm{stroke:var(--teal)}.dance-right-arm{stroke:var(--orange)}
+.dance-timing{display:flex;align-items:center;gap:14px;margin:10px 0;text-align:left}
+#danceCountdown{font-size:27px;white-space:nowrap;color:var(--teal);min-width:65px}
+#danceStatus{font-size:14px;color:var(--muted);margin:0}
+#adaptedMove{min-height:40px}
+#adaptedMove[aria-pressed=true]{border-color:var(--teal);background:var(--teal-soft,#e6f6f4)}
+#danceAlternative[hidden],#oldPinRow[hidden]{display:none}
+#danceApproval{margin-top:14px;text-align:left}
+#danceApproval label{font-size:13px;font-weight:600}
+.approval-row{display:flex;gap:8px;margin-top:5px}
+#approvalPin{min-width:0;width:100%;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font:inherit}
+#danceError,#pinSetupStatus{color:var(--orange);font-size:13px;margin:6px 0;min-height:18px}
+#teacherPinDialog{width:min(94vw,430px);max-height:94dvh;overflow:auto;text-align:left}
+#teacherPinForm label{display:block;font-size:13px;margin:12px 0}
+#teacherPinForm input{display:block;min-height:44px;width:100%;border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit;margin-top:5px}
+#saveTeacherPin{width:100%}
+.move-robot .dance-left-arm{animation:robot-arm .7s steps(2,end) infinite alternate}
+.move-robot .dance-right-arm{animation:robot-arm .7s steps(2,end) infinite alternate-reverse}
+.move-penguin .dance-body{animation:penguin-wobble .6s ease-in-out infinite alternate}
+.move-penguin .dance-left-arm{transform:rotate(-60deg)}.move-penguin .dance-right-arm{transform:rotate(60deg)}
+.move-jelly .dance-left-arm{animation:jelly-left .45s ease-in-out infinite alternate}
+.move-jelly .dance-right-arm{animation:jelly-left .45s ease-in-out infinite alternate-reverse}
+.move-jelly .dance-body{animation:small-bob .45s ease-in-out infinite alternate}
+.move-disco .dance-left-arm{animation:disco-arm .8s ease-in-out infinite alternate}
+.move-disco .dance-right-arm{animation:disco-arm .8s ease-in-out infinite alternate-reverse}
+.move-chicken .dance-left-arm{animation:chicken-flap .35s ease-in-out infinite alternate}
+.move-chicken .dance-right-arm{animation:chicken-flap .35s ease-in-out infinite alternate-reverse}
+.move-wipers .dance-left-arm,.move-wipers .dance-right-arm{animation:wiper-arms .65s ease-in-out infinite alternate}
+.move-alien .dance-head{animation:alien-head .7s ease-in-out infinite alternate}
+.move-alien .dance-right-arm{animation:alien-wave .35s ease-in-out infinite alternate}
+.dance-seated .dance-left-leg{transform:rotate(-24deg)}.dance-seated .dance-right-leg{transform:rotate(24deg)}
+.dance-seated .dance-body{animation:none}
+.dance-finished *{animation-play-state:paused!important}
+@keyframes robot-arm{from{transform:rotate(-35deg)}to{transform:rotate(35deg)}}
+@keyframes penguin-wobble{from{transform:translateX(-10px) rotate(-9deg)}to{transform:translateX(10px) rotate(9deg)}}
+@keyframes jelly-left{from{transform:rotate(-25deg) scaleY(.8)}to{transform:rotate(20deg) scaleY(1.15)}}
+@keyframes small-bob{from{transform:translateY(0)}to{transform:translateY(7px)}}
+@keyframes disco-arm{from{transform:rotate(-70deg)}to{transform:rotate(55deg)}}
+@keyframes chicken-flap{from{transform:rotate(-15deg) scaleX(.7)}to{transform:rotate(30deg) scaleX(.7)}}
+@keyframes wiper-arms{from{transform:rotate(-30deg)}to{transform:rotate(30deg)}}
+@keyframes alien-head{from{transform:rotate(-13deg)}to{transform:rotate(13deg)}}
+@keyframes alien-wave{from{transform:rotate(-55deg)}to{transform:rotate(-15deg)}}
+@media(prefers-reduced-motion:reduce){.dance-figure *{animation:none!important}}
+@media(max-height:720px){.dance-figure{height:150px;margin:5px auto}#danceDialog{padding:14px}#danceTitle{font-size:21px}}
+
+/* Every mission begins deliberately with its own 90-second clock. */
+.mission-start{position:absolute;inset:0;z-index:2;background:#ffffffeb;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
+.mission-start[hidden]{display:none}
+.mission-start h2{font-size:30px;color:var(--navy)}
+.mission-start p{font-size:15px;color:var(--muted);max-width:300px}
+#missionStart{font-size:23px;min-height:64px;min-width:180px;border-radius:18px}
+#missionClock{font-variant-numeric:tabular-nums;margin-right:auto;align-self:center;font-size:23px;color:var(--navy)}
+#missionClock.time-low{color:var(--orange)}

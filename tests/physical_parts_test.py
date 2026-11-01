@@ -13,6 +13,7 @@ with sync_playwright() as p:
  page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  context.route('**/*',lambda r:r.continue_() if r.request.url.startswith('http://127.0.0.1:') else r.abort())
  page.goto(f'http://127.0.0.1:{server.server_port}/tools/circuitlab/index.html')
+ page.locator('#missionStart').click()
  # Palette stays IEC; placed parts are physical by default.
  assert page.locator('#parts button').count()==17
  assert page.locator('#parts [data-renderer]').count()==0
@@ -54,6 +55,7 @@ with sync_playwright() as p:
   assert page.locator('#physicalView').bounding_box()['height']>=40
  # Standalone download includes definitions, render code and no sidecar assets.
  page.goto(f'http://127.0.0.1:{server.server_port}/downloads/circuitlab.html')
+ if page.locator('#missionStartOverlay').is_visible():page.locator('#missionStart').click()
  page.select_option('#examples','single');assert page.locator('.physical-part').count()==2
  assert page.locator('.part-glow').count()==1
  assert not errors,errors

@@ -1,5 +1,6 @@
 """Mission advancement requires a verified circuit and clears only the board on transition."""
 from pathlib import Path
+from answer_gate_helpers import approve_answer
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
 from functools import partial
 from threading import Thread
@@ -19,22 +20,22 @@ with sync_playwright() as p:
  assert page.locator('#nextMission').is_disabled()
  page.evaluate('nextMission()');assert page.evaluate('mission')==0
  # Hints/answers do not count as completing a mission.
- page.locator('#hint').click();page.locator('#showAnswer').click();page.locator('#closeAnswer').click()
+ page.locator('#hint').click();approve_answer(page);page.locator('#closeAnswer').click()
  assert page.locator('#missionNext').is_disabled()
  # Verify, pause, edit: pause keeps success; an invalid edit locks Next again.
- page.select_option('#examples','single');assert page.locator('#missionNext').is_enabled()
+ page.select_option('#examples','single');page.locator('#missionStart').click();assert page.locator('#missionNext').is_enabled()
  page.locator('#pause').click();assert page.locator('#missionNext').is_enabled()
  page.evaluate('checkpoint();state.wires.pop();changed()')
  assert page.locator('#missionNext').is_disabled()
  page.evaluate('nextMission()');assert page.evaluate('mission')==0
- page.locator('#undo').click();assert page.locator('#missionNext').is_enabled()
+ page.locator('#undo').click();page.locator('#run').click();assert page.locator('#missionNext').is_enabled()
  # Next clears the circuit, interaction state, timer, selection and history, keeping achievements.
  page.evaluate("classroom.names=['Ada'];classroom.scores=[20];remaining=12;timerOn=true")
  page.locator('#missionNext').tap()
  assert page.evaluate('mission')==1
  assert page.evaluate('state.components.length===0 && state.wires.length===0')
  assert page.evaluate('history.length===0 && future.length===0 && selected===null && armed===null && example===""')
- assert page.evaluate('!running && !timerOn && remaining===180')
+ assert page.evaluate('!running && !timerOn && remaining===90')
  assert page.evaluate('classroom.scores[0]')==20
  assert page.evaluate('classroom.completed.includes(0)')
  assert page.locator('#missionNext').is_disabled()
@@ -46,7 +47,7 @@ with sync_playwright() as p:
  for i in range(1,24):
   assert page.evaluate('mission')==i
   assert page.locator('#nextMission').is_disabled()
-  page.evaluate('state=solutionCircuit(mission);running=true;changed()')
+  page.evaluate('state=solutionCircuit(mission);beginMission();running=true;changed()')
   assert 'verified' in page.locator('#missionStatus').inner_text()
   assert page.locator('#missionNext').is_enabled()
   assert page.locator('#nextMission').is_enabled()

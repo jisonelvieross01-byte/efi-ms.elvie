@@ -23,7 +23,7 @@ with sync_playwright() as p:
  with page.expect_download() as download:page.locator('.download').click()
  downloaded=Path('/tmp/circuitlab-standalone-test.html');download.value.save_as(downloaded)
  assert 'CircuitSolver' in downloaded.read_text()
- page.goto(URL+'/downloads/circuitlab.html');page.select_option('#examples','parallel')
+ page.goto(URL+'/downloads/circuitlab.html');page.locator('#missionStart').click();page.select_option('#examples','parallel')
  assert page.evaluate('result.ok && result.active')
  assert page.evaluate('Math.abs(result.readings[state.components.find(c=>c.type==="battery").id].current + .12)<1e-7')
  page.goto(URL)

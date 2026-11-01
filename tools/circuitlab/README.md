@@ -175,3 +175,34 @@ transitions, progress retention and migration of old saves to mission-only navig
 
 Missions 21–24 add unequal series voltage sharing, unequal parallel branch currents,
 a switched LED and a final two-meter measurement check.
+
+## 90-second attempts and teacher approval
+
+Every mission starts with a central Start button and a fixed 01:30 countdown. A
+verified circuit stops the clock and unlocks Next. Back remains unrestricted. A
+new mission opens with a fresh clock and clean board. Simulation Pause leaves the
+clock running; the teacher’s timer Pause/Resume retains time;
+an active wall-clock deadline is retained across page reloads.
+
+Before class, open Teacher → Set PIN and choose 4–8 digits. There is no default
+PIN. The browser stores a salted hash locally, and changing it requires the current
+PIN. This is a classroom convenience lock, not server authentication; browser
+storage and page code remain under the device owner’s control. Use current Chrome,
+Edge, Firefox or Safari on HTTPS, localhost or a supported local-file context.
+
+Show answer first displays one of seven local animated stick-figure moves. The
+assignment is random per mission, avoids adjacent repeats, and is saved locally.
+After three seconds, the teacher observes the student’s copied, seated or spoken
+version and enters their PIN to reveal that answer. There is no camera or automatic
+movement assessment. Reduced-motion preferences disable the animations while
+leaving text instructions available.
+
+If 90 seconds expires without a verified circuit, the same saved move opens as a
+retry challenge. Teacher approval prepares another 90-second attempt on the same
+mission, preserving the student’s work. The student must press Start again. This
+does not reveal an answer, mark a mission complete or award progress. Cancelling
+keeps the attempt expired, including when navigating away and back; Retry move brings back the same teacher-approval gate.
+
+Tests: `dance_gate_test.py` checks real delay, approval and seven moves;
+`mission_clock_test.py` checks Start, deadlines, retries, reload and pause behavior.
+Both run from the repository root as `python tests/<name>.py`.

@@ -1,5 +1,6 @@
 """Offline Chromium integration checks; uses system Chromium and Python Playwright."""
 from pathlib import Path
+from answer_gate_helpers import approve_answer
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from functools import partial
 from threading import Thread
@@ -14,6 +15,7 @@ with sync_playwright() as p:
  page.on('pageerror',lambda e: errors.append(str(e)))
  context.route('**/*',lambda route: route.continue_() if route.request.url.startswith('http://127.0.0.1:') else route.abort())
  page.goto(f'http://127.0.0.1:{server.server_port}/tools/circuitlab/index.html')
+ page.locator('#missionStart').click()
  assert page.locator('#parts button').count()==17
  # Actual mouse dragging, terminal connection and undo/redo.
  page.locator('#parts [data-type="battery"]').click()
@@ -42,7 +44,7 @@ with sync_playwright() as p:
  # Mission validation must require the correct circuit.
  page.locator('[data-mode="missions"]').click();page.select_option('#examples','single');assert 'verified' in page.locator('#missionStatus').inner_text()
  page.locator('#missionNext').click();assert 'verified' not in page.locator('#missionStatus').inner_text()
- page.evaluate("load('series');mission=4;activity()");assert 'verified' in page.locator('#missionStatus').inner_text()
+ page.evaluate("load('series');mission=4;beginMission();activity()");assert 'verified' in page.locator('#missionStatus').inner_text()
  page.evaluate("load('parallel');mission=5;activity()");assert 'verified' in page.locator('#missionStatus').inner_text()
  page.evaluate("load('meters');mission=2;activity()");assert 'verified' in page.locator('#missionStatus').inner_text()
  page.evaluate("mission=3;activity()");assert 'verified' in page.locator('#missionStatus').inner_text()
@@ -62,7 +64,7 @@ with sync_playwright() as p:
  page.locator('#inspector button').click();assert page.evaluate("state.components.find(c=>c.type==='switch').closed")
  page.locator('#teacher').click();page.locator('#timerStart').click();assert page.evaluate('timerOn && running')
  page.locator('#timerPause').click();assert page.evaluate('!timerOn && !running')
- page.locator('#reveal').click();assert page.locator('#explanation').is_visible()
+ approve_answer(page,'#reveal');assert page.locator('#explanation').is_visible()
  page.locator('#closeAnswer').click()
  # Mission-only navigation and local board/progress persistence.
  assert page.locator('#modes button').count()==1

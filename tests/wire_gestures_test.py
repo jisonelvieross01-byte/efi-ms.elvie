@@ -13,6 +13,7 @@ with sync_playwright() as p:
  context.route('**/*',lambda r:r.continue_() if r.request.url.startswith('http://127.0.0.1:') else r.abort())
  page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.goto(f'http://127.0.0.1:{server.server_port}/tools/circuitlab/index.html')
+ page.locator('#missionStart').click()
  def xy(x,y):return page.evaluate('([x,y])=>{const b=document.querySelector("#board"),p=b.createSVGPoint();p.x=x;p.y=y;const r=p.matrixTransform(b.getScreenCTM());return [r.x,r.y]}',[x,y])
  def terminal(key):return page.evaluate('k=>endpoint(k)',key)
  def mouse_drag(a,b):

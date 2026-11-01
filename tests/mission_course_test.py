@@ -1,5 +1,6 @@
 """All twenty-four missions need physically valid answers; broken/wrong-value circuits must fail."""
 from pathlib import Path
+from answer_gate_helpers import approve_answer
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
 from functools import partial
 from threading import Thread
@@ -28,7 +29,7 @@ with sync_playwright() as p:
   page.set_viewport_size({'width':width,'height':900})
   page.evaluate('mission=19;activity()');page.locator('#hint').click()
   assert page.locator('#hintLayer [data-guide-part]').count()==6
-  page.locator('#showAnswer').click();assert page.locator('#answerDialog').is_visible()
+  approve_answer(page);assert page.locator('#answerDialog').is_visible()
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   page.locator('#closeAnswer').click()
   page.locator('#missionBack').click();assert page.evaluate('mission')==18

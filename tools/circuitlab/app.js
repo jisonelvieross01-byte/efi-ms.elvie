@@ -5,8 +5,8 @@ const $=s=>document.querySelector(s), NS='http://www.w3.org/2000/svg';
 let state={components:[],wires:[]},selected=null,armed=null,placing=null,tool='select',running=false,result=null,mode='missions',mission=0,detective=0,history=[],future=[],serial=0,drag=null,example='',sound=false;
 let missionPassSignature='';
 function missionSignature(){return mission+':'+JSON.stringify(state);}
-function mayAdvanceMission(){return (mode==='missions'||mode==='challenge')&&missionPassSignature===missionSignature();}
-let classroom={names:['Pair 1','Pair 2'],scores:[0,0],completed:[],awarded:[]},remaining=180,timerOn=false;
+function mayAdvanceMission(){return missionPhase==='complete'&&(mode==='missions'||mode==='challenge')&&missionPassSignature===missionSignature();}
+let classroom={names:['Pair 1','Pair 2'],scores:[0,0],completed:[],awarded:[]},remaining=90,timerOn=false;
 const missions=[
  ['Light a lamp','Join a battery and a lamp in a loop.','Charges need a complete path back to the source.','lamp'],
  ['Take control','Light a lamp with a closed switch.','A closed switch completes a path; an open switch interrupts it.','switch'],
@@ -36,9 +36,48 @@ const missions=[
 const detectives=[['A meter blocks the way','The lamp stays dark. Check the meter.','A voltmeter has infinite resistance. Replace the series voltmeter with an ammeter.','series-meter'],['A dangerous shortcut','The ammeter is across the battery. Fix it.','Never place an ammeter directly across a source. Put it in series with the load.','short-meter'],['The backwards LED','The LED stays dark. Fix its direction.','An LED conducts only from anode to cathode. Reconnect its anode towards the source’s + terminal and its cathode towards −. Rotation changes the drawing, not the attached wire ends.','reverse-led']];
 function notify(text){$('#toast').textContent=text;$('#toast').classList.add('show');clearTimeout(notify.t);notify.t=setTimeout(()=>$('#toast').classList.remove('show'),2600);}
 function beep(){if(!sound)return;try{const ac=new (window.AudioContext||window.webkitAudioContext)(),o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);g.gain.value=.025;o.frequency.value=660;o.start();o.stop(ac.currentTime+.1);o.onended=()=>ac.close();}catch{}}
-function persist(){try{localStorage.setItem('circuitlab-v1',JSON.stringify({state,classroom,mission,detective,mode,serial,example}));$('#saveStatus').textContent='Saved';}catch{$('#saveStatus').textContent='Not saved — keep this tab open';}}
+// A wall-clock deadline keeps a 90-second attempt accurate across slow frames and reloads.
+const MISSION_SECONDS=90;
+let missionPhase='ready',missionDeadline=null,retryLocks={};
+function resetAttempt(){missionPhase=retryLocks[mission]?'expired':'ready';missionDeadline=null;remaining=retryLocks[mission]?0:MISSION_SECONDS;timerOn=false;running=false;result=null;missionPassSignature='';}
+function refreshMissionClock(){
+ const locked=missionPhase==='ready'||missionPhase==='paused'||missionPhase==='expired';
+ $('#missionStartOverlay').hidden=!locked;
+ $('#missionStart').textContent=missionPhase==='expired'?'Retry move':missionPhase==='paused'?'Resume':'Start';
+ $('#missionStartTitle').textContent=missionPhase==='expired'?'Time’s up':missionPhase==='paused'?'Paused':'Ready?';
+ $('#missionStartNote').textContent=missionPhase==='expired'?'Copy your move; ask your teacher to approve.':'1 minute 30 seconds for this mission.';
+ $('#run').disabled=missionPhase==='ready'||missionPhase==='expired';
+ $('#missionClock').textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');
+ $('#missionClock').classList.toggle('time-low',remaining<=15&&missionPhase==='running');
+ $('#missionClock').setAttribute('aria-label',remaining+' seconds remaining');
+}
+function beginMission(){
+ if(missionPhase==='expired'){showDance('retry');return;}
+ if(missionPhase==='complete'){running=true;changed();return;}
+ missionPhase='running';missionDeadline=Date.now()+remaining*1000;timerOn=true;running=true;changed();renderTimer();
+}
+function pauseMission(){
+ if(missionPhase==='running'){remaining=Math.max(0,Math.ceil((missionDeadline-Date.now())/1000));missionPhase='paused';}
+ timerOn=false;missionDeadline=null;running=false;changed();renderTimer();
+}
+function expireMission(){
+ if(missionPhase!=='running')return;
+ retryLocks[mission]=true;missionPhase='expired';remaining=0;timerOn=false;missionDeadline=null;running=false;result=null;missionPassSignature='';cancelWireGesture();drag=null;
+ $('#answerDialog').close();$('#explanation').hidden=true;changed();renderTimer();showDance('retry');beep();
+}
+function tickMissionClock(){
+ if(missionPhase!=='running'||!timerOn||missionDeadline===null)return;
+ const next=Math.max(0,Math.ceil((missionDeadline-Date.now())/1000));
+ if(next!==remaining){remaining=next;renderTimer();persist();}
+ if(remaining===0)expireMission();
+}
+function retryMission(){delete retryLocks[mission];resetAttempt();changed();renderTimer();notify('Ready for another try');}
+$('#missionStart').onclick=beginMission;
+setInterval(tickMissionClock,100);
+
+function persist(){try{localStorage.setItem('circuitlab-v1',JSON.stringify({state,classroom,mission,detective,mode,serial,example,retryLocks,attempt:{phase:missionPhase,remaining,deadline:missionDeadline}}));$('#saveStatus').textContent='Saved';}catch{$('#saveStatus').textContent='Not saved — keep this tab open';}}
 function checkpoint(){history.push(JSON.stringify(state));if(history.length>80)history.shift();future=[];}
-function changed(){result=running?CircuitSolver.solve(state):null;renderBoard();renderReadings();validate();persist();$('#undo').disabled=!history.length;$('#redo').disabled=!future.length;}
+function changed(){if(missionPhase==='running'&&missionDeadline!==null&&Date.now()>=missionDeadline){expireMission();return;}result=running?CircuitSolver.solve(state):null;renderBoard();renderReadings();validate();refreshMissionClock();persist();$('#undo').disabled=!history.length;$('#redo').disabled=!future.length;}
 function part(type,x,y,value){return {id:'p'+(++serial),type,x,y,rotation:0,value:value??PARTS[type].value,closed:false};}
 function terminal(c,t){const a=(c.rotation||0)*Math.PI/180,d=t===0?-50:50;return {x:c.x+d*Math.cos(a),y:c.y+d*Math.sin(a)};}
 function endpoint(key){const [id,t]=key.split(':'),c=state.components.find(c=>c.id===id);return c?terminal(c,+t):null;}
@@ -140,6 +179,7 @@ function renderWirePreview(p){const layer=$('#wirePreview');layer.replaceChildre
 }
 function cancelWireGesture(){wireGesture=null;armed=null;$('#wirePreview').replaceChildren();}
 $('#board').addEventListener('pointerdown',ev=>{
+ if(missionPhase!=='running'&&missionPhase!=='complete')return;
  if(ev.button!==0||wireGesture||drag)return;ev.preventDefault();const p=point(ev),rotateHandle=ev.target.closest('[data-rotate-part]'),handle=ev.target.closest('[data-wire-handle]'),term=ev.target.closest('[data-terminal]'),pe=ev.target.closest('[data-part]'),we=ev.target.closest('[data-wire]');
  if(rotateHandle){selected=rotateHandle.dataset.rotatePart;rotate();return;}
  if(handle){const w=state.wires.find(w=>w.id===handle.dataset.handleWire),side=handle.dataset.wireHandle;armed=null;wireGesture={kind:side==='bend'?'bend':'reconnect',wireId:w.id,side,fixed:side==='a'?w.b:w.a,start:p,from:endpoint(w.a),to:endpoint(w.b),pointer:ev.pointerId,moved:false};$('#board').setPointerCapture(ev.pointerId);return;}
@@ -187,7 +227,7 @@ $('#rotate').onclick=rotate;$('#delete').onclick=remove;$('#clear').onclick=()=>
 $('#undo').onclick=()=>{if(history.length){future.push(JSON.stringify(state));state=JSON.parse(history.pop());selected=armed=null;changed();}};
 $('#redo').onclick=()=>{if(future.length){history.push(JSON.stringify(state));state=JSON.parse(future.pop());selected=armed=null;changed();}};
 $('#selectTool').onclick=()=>{tool='select';placing=null;armed=null;renderBoard();};$('#wireTool').onclick=()=>{tool='wire';placing=null;renderBoard();notify('Drag from one dot to another');};
-$('#run').onclick=()=>{running=true;changed();};$('#pause').onclick=()=>{running=false;timerOn=false;changed();};
+$('#run').onclick=()=>{if(missionPhase==='paused'){beginMission();return;}if(missionPhase!=='running'&&missionPhase!=='complete')return;running=true;changed();};$('#pause').onclick=()=>{running=false;changed();};
 document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='Escape'){cancelWireGesture();if(drag){state=JSON.parse(drag.snapshot);drag=null;}placing=armed=null;renderBoard();}if((e.key==='Enter'||e.key===' ')&&e.target.closest('[data-rotate-part]')){e.preventDefault();selected=e.target.closest('[data-rotate-part]').dataset.rotatePart;rotate();}if(e.key.toLowerCase()==='r')rotate();if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();remove();}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();$(e.shiftKey?'#redo':'#undo').click();}});
 // Templates are real editable networks, not illustrative diagrams.
 function makeExample(name){const C=[],W=[];const add=(type,x,y,v)=>{const c=part(type,x,y,v);C.push(c);return c;};const link=(a,t,b,u)=>W.push({id:'w'+(++serial),a:a.id+':'+t,b:b.id+':'+u});
@@ -199,7 +239,7 @@ function makeExample(name){const C=[],W=[];const add=(type,x,y,v)=>{const c=part
  else {link(s,0,lamp,0);link(lamp,1,s,1);if(name==='short-meter'){const a=add('ammeter',650,220);link(s,0,a,0);link(a,1,s,1);}}}
  return {components:C,wires:W};
 }
-function load(name){checkpoint();state=makeExample(name);example=name;selected=armed=null;running=true;changed();}
+function load(name){checkpoint();state=makeExample(name);example=name;selected=armed=null;running=missionPhase==='running'||missionPhase==='complete';changed();}
 $('#examples').onchange=e=>{if(e.target.value)load(e.target.value);};$('#reset').onclick=()=>{if(example)load(example);else{$('#clear').click();}};
 function showSymbol(type){$('#symbolDetail').innerHTML=icon(type)+'<h2>'+PARTS[type].name+'</h2><p>'+PARTS[type].info+'</p>';$('#symbolDialog').showModal();}$('#closeDialog').onclick=()=>$('#symbolDialog').close();
 let quizType='';function quiz(){const keys=Object.keys(PARTS);quizType=keys[Math.floor(Math.random()*keys.length)];const choices=[quizType,...keys.filter(t=>t!==quizType).sort(()=>Math.random()-.5).slice(0,3)].sort(()=>Math.random()-.5);const box=$('#explorerPanel');box.innerHTML='<h2>Which symbol is this?</h2><svg class="quiz-symbol" viewBox="-60 -55 120 100">'+symbol(quizType)+'</svg><div id="quizChoices"></div><p id="quizAnswer" role="status">Choose its name.</p>';for(const t of choices){const b=document.createElement('button');b.textContent=PARTS[t].name;b.onclick=()=>{const correct=t===quizType;$('#quizAnswer').textContent=correct?'Correct! '+PARTS[t].info:'Not quite. Try again.';if(correct){beep();if(!$('#nextQuiz')){const n=document.createElement('button');n.id='nextQuiz';n.textContent='Next symbol';n.onclick=quiz;box.append(n);}}};$('#quizChoices').append(b);}}
@@ -238,13 +278,88 @@ function drawGuide(container,network,answer=false){
  });
 }
 function renderGuide(){
- if(guideKey!==helpKey()){guideKey=helpKey();guideVisible=false;$('#answerDialog').close();}
+ if(guideKey!==helpKey()){guideKey=helpKey();guideVisible=false;cancelDance();$('#answerDialog').close();$('#answerDrawing').replaceChildren();$('#answerConnections').replaceChildren();}
  const enabled=mode!=='explorer';$('#boardHelp').hidden=!enabled;
  $('#hint').setAttribute('aria-pressed',guideVisible);$('#hint').textContent=guideVisible?'Hide hint':'Hint';
  $('#hintLayer').replaceChildren();$('#hintLabel').hidden=!guideVisible;$('#empty').hidden=!!state.components.length||guideVisible;
  if(guideVisible&&enabled)drawGuide($('#hintLayer'),solutionCircuit(guideMission()));
 }
-function showAnswer(){
+// A local classroom gate: the teacher observes the student and approves with a PIN.
+// No camera or movement detection; PIN verification never marks a circuit complete.
+const DANCE_MOVES=[
+ {name:'Robot elbows',hint:'Move your elbows like a robot.',css:'robot'},
+ {name:'Penguin wobble',hint:'Keep your elbows in and wobble gently.',css:'penguin'},
+ {name:'Jelly arms',hint:'Let your arms wiggle like jelly.',css:'jelly'},
+ {name:'Disco pointer',hint:'Point up, then across, like a disco star.',css:'disco'},
+ {name:'Chicken wings',hint:'Flap your elbows like tiny wings.',css:'chicken'},
+ {name:'Window wipers',hint:'Sweep your hands from side to side.',css:'wipers'},
+ {name:'Alien hello',hint:'Tilt your head and give a tiny wave.',css:'alien'}
+];
+const DANCE_PIN_KEY='circuitlab-teacher-pin-v1';
+let sessionTeacherPin=null,danceRequest=null,danceTicker=null,danceAssignments=[];
+try{const saved=JSON.parse(localStorage.getItem('circuitlab-dance-moves-v1'));if(Array.isArray(saved)&&saved.length===missions.length&&saved.every(i=>Number.isInteger(i)&&i>=0&&i<DANCE_MOVES.length))danceAssignments=saved;}catch{}
+if(!danceAssignments.length){let last=-1;while(danceAssignments.length<missions.length){const bag=DANCE_MOVES.map((_,i)=>i);for(let i=bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bag[i],bag[j]]=[bag[j],bag[i]];}if(bag[0]===last)[bag[0],bag[1]]=[bag[1],bag[0]];danceAssignments.push(...bag);last=bag.at(-1);}danceAssignments.length=missions.length;try{localStorage.setItem('circuitlab-dance-moves-v1',JSON.stringify(danceAssignments));}catch{}}
+function teacherPin(){
+ if(sessionTeacherPin)return sessionTeacherPin;
+ try{const p=JSON.parse(localStorage.getItem(DANCE_PIN_KEY));if(p&&/^[a-f0-9]{32}$/.test(p.salt)&&/^[a-f0-9]{64}$/.test(p.hash))return p;}catch{}
+ return null;
+}
+async function pinDigest(pin,salt){const bytes=new TextEncoder().encode(salt+':'+pin);const digest=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(digest),v=>v.toString(16).padStart(2,'0')).join('');}
+function refreshPinLabel(){$('#teacherPinSetup').textContent=teacherPin()?'Change PIN':'Set PIN';}
+function cancelDance(){clearInterval(danceTicker);danceTicker=null;danceRequest=null;$('#approvalPin').value='';$('#danceDialog').close();}
+function danceTick(){
+ const request=danceRequest;if(!request)return;
+ const seconds=Math.max(0,Math.ceil((3000-(performance.now()-request.started))/1000));
+ $('#danceCountdown').textContent=seconds?seconds+' s':'Ready';
+ $('#danceStatus').textContent=seconds?'Copy the move.':teacherPin()?'Teacher: check the move and enter your PIN.':'Ask your teacher to set a PIN in Teacher tools.';
+ $('#approveDance').disabled=seconds>0||!teacherPin()||request.busy;
+ $('#approvalPin').disabled=seconds>0||!teacherPin()||request.busy;
+ $('#danceFigure').classList.toggle('dance-finished',seconds===0);
+}
+function showAnswer(){showDance(missionPhase==='expired'?'retry':'answer');}
+function showDance(purpose='answer'){
+ if($('#answerDialog').open)$('#answerDialog').close();
+ cancelDance();$('#explanation').hidden=true;$('#answerDrawing').replaceChildren();$('#answerConnections').replaceChildren();
+ const moveIndex=danceAssignments[mission],move=DANCE_MOVES[moveIndex];
+ danceRequest={key:helpKey(),started:performance.now(),moveIndex,busy:false,purpose};
+ $('#danceTitle').textContent=move.name;$('#danceKicker').textContent=purpose==='retry'?'TIME’S UP · RETRY MOVE':'MOVE TO REVEAL';$('#danceInstruction').textContent=move.hint;
+ $('#danceFigure').setAttribute('class','dance-figure move-'+move.css);$('#danceFigure').dataset.move=move.css;
+ $('#adaptedMove').setAttribute('aria-pressed','false');$('#adaptedMove').textContent='Seated option';$('#danceAlternative').hidden=true;
+ $('#approvalPin').value='';$('#danceError').textContent='';$('#danceDialog').showModal();danceTick();danceTicker=setInterval(danceTick,100);
+}
+$('#cancelDance').onclick=cancelDance;$('#danceDialog').addEventListener('cancel',cancelDance);
+$('#adaptedMove').onclick=()=>{const active=$('#adaptedMove').getAttribute('aria-pressed')!=='true';$('#adaptedMove').setAttribute('aria-pressed',active);$('#danceFigure').classList.toggle('dance-seated',active);$('#danceAlternative').hidden=!active;};
+$('#danceApproval').onsubmit=async ev=>{
+ ev.preventDefault();const request=danceRequest,pin=teacherPin();
+ if(!request||request.busy||request.key!==helpKey()||performance.now()-request.started<3000||!pin)return;
+ request.busy=true;danceTick();$('#danceError').textContent='';
+ try{
+  const valid=await pinDigest($('#approvalPin').value,pin.salt)===pin.hash;
+  if(danceRequest!==request||request.key!==helpKey())return;
+  $('#approvalPin').value='';
+  if(!valid){$('#danceError').textContent='Incorrect PIN. Ask your teacher.';return;}
+  const purpose=request.purpose;cancelDance();if(purpose==='retry'){retryMission();return;}if(missionPhase==='expired')return;$('#explanation').hidden=false;$('#explanation').textContent=missions[mission][2];revealAnswer();
+ }catch{if(danceRequest===request)$('#danceError').textContent='PIN check unavailable in this browser.';}
+ finally{if(danceRequest===request){request.busy=false;danceTick();}}
+};
+$('#teacherPinSetup').onclick=()=>{$('#oldPinRow').hidden=!teacherPin();$('#oldTeacherPin').value='';$('#newTeacherPin').value='';$('#confirmTeacherPin').value='';$('#pinSetupStatus').textContent='';$('#teacherPinDialog').showModal();};
+$('#closePinSetup').onclick=()=>$('#teacherPinDialog').close();
+$('#teacherPinForm').onsubmit=async ev=>{
+ ev.preventDefault();const existing=teacherPin(),value=$('#newTeacherPin').value;
+ if(!/^\d{4,8}$/.test(value)||value!==$('#confirmTeacherPin').value){$('#pinSetupStatus').textContent='Use matching PINs of 4–8 digits.';return;}
+ $('#saveTeacherPin').disabled=true;
+ try{
+  if(existing&&await pinDigest($('#oldTeacherPin').value,existing.salt)!==existing.hash){$('#pinSetupStatus').textContent='Current PIN is incorrect.';return;}
+  const salt=Array.from(crypto.getRandomValues(new Uint8Array(16)),v=>v.toString(16).padStart(2,'0')).join('');
+  const record={salt,hash:await pinDigest(value,salt)};let saved=true;sessionTeacherPin=record;
+  try{localStorage.setItem(DANCE_PIN_KEY,JSON.stringify(record));}catch{saved=false;}
+  $('#oldTeacherPin').value=$('#newTeacherPin').value=$('#confirmTeacherPin').value='';$('#teacherPinDialog').close();refreshPinLabel();notify(saved?'Teacher PIN saved':'PIN set for this session');
+ }catch{$('#pinSetupStatus').textContent='PIN setup needs a secure, current browser.';}
+ finally{$('#saveTeacherPin').disabled=false;}
+};
+refreshPinLabel();
+
+function revealAnswer(){
  const index=guideMission(),network=solutionCircuit(index),calculated=CircuitSolver.solve(network);
  if(!calculated.ok||!calculated.active){notify('This guide is unavailable.');return;}
  $('#answerTitle').textContent='Answer · '+missions[index][0];
@@ -270,8 +385,8 @@ function nextMission(){if(!mayAdvanceMission()){notify('Finish this mission firs
 function backMission(){if(mission===0){notify('This is the first mission');return;}startMission(mission-1);}
 function startMission(index){
  cancelWireGesture();drag=null;missionPassSignature='';mission=index;
- state={components:[],wires:[]};history=[];future=[];selected=armed=placing=null;example='';$('#examples').value='';running=false;result=null;
- $('#explanation').hidden=true;remaining=+$('#minutes').value*60;timerOn=false;renderTimer();activity();changed();
+ state={components:[],wires:[]};history=[];future=[];selected=armed=placing=null;example='';$('#examples').value='';resetAttempt();
+ $('#explanation').hidden=true;renderTimer();activity();changed();
 }
 $('#modes').onclick=e=>{const b=e.target.closest('[data-mode]');if(!b)return;mode=b.dataset.mode;placing=armed=null;if(mode==='detective')load(detectives[detective][3]);activity();renderBoard();persist();};
 function scoreboard(a){const controls=document.createElement('label');controls.textContent='Participants ';const count=document.createElement('input');count.type='number';count.min=1;count.max=20;count.value=classroom.names.length;count.style.width='70px';count.onchange=()=>{const n=Math.min(20,Math.max(1,+count.value||1));while(classroom.names.length<n){classroom.names.push('Pair '+(classroom.names.length+1));classroom.scores.push(0);}classroom.names.length=n;classroom.scores.length=n;activity();persist();};controls.append(count);a.append(controls);const table=document.createElement('table');table.className='scoreboard';table.innerHTML='<thead><tr><th>Student / pair</th><th>Points</th><th>Teacher awards</th></tr></thead>';const tbody=document.createElement('tbody');classroom.names.forEach((name,i)=>{const tr=document.createElement('tr'),td=document.createElement('td'),inp=document.createElement('input');inp.type='text';inp.maxLength=40;inp.value=name;inp.setAttribute('aria-label','Participant '+(i+1));inp.onchange=()=>{classroom.names[i]=inp.value;persist();};td.append(inp);const score=document.createElement('td');score.textContent=classroom.scores[i];const actions=document.createElement('td');for(const delta of [10,-10]){const b=document.createElement('button');b.textContent=delta>0?'+10':'−10';b.setAttribute('aria-label',(delta>0?'Award':'Remove')+' 10 points for participant '+(i+1));b.onclick=()=>{classroom.scores[i]=Math.max(0,classroom.scores[i]+delta);activity();persist();};actions.append(b);}tr.append(td,score,actions);tbody.append(tr);});table.append(tbody);a.append(table);const p=document.createElement('p');p.className='micro';p.textContent='Give each pair the mission. Check it, then award points.';a.append(p);const reset=document.createElement('button');reset.textContent='Reset scores';reset.onclick=()=>{classroom.scores.fill(0);activity();persist();};a.append(reset);}
@@ -301,17 +416,17 @@ function checkMission(index){if(!result?.ok||!result.active)return false;const r
  case'master':return controlled&&amp&&volt&&lamps.some(l=>mag(l)>=.02&&mag(l)<=.04&&types('variable').some(v=>seriesWith(v,l)));
  default:return false;}
 }
-function validate(){const status=$('#missionStatus');if(!status){$('#nextMission').disabled=true;return;}let passed=false;if(mode==='missions'||mode==='challenge'){passed=checkMission(mission);if(passed)missionPassSignature=missionSignature();passed=passed||mayAdvanceMission();if(passed&&!classroom.completed.includes(mission)){classroom.completed.push(mission);beep();const bar=$('.progress div');if(bar)bar.style.width=classroom.completed.length/missions.length*100+'%';}}
+function validate(){const status=$('#missionStatus');if(!status){$('#nextMission').disabled=true;return;}let passed=false;if(mode==='missions'||mode==='challenge'){if(missionPhase==='complete'&&missionPassSignature!==missionSignature()){missionPhase='running';timerOn=true;missionDeadline=Date.now()+remaining*1000;}passed=(missionPhase==='running'||missionPhase==='complete')&&checkMission(mission);if(passed){missionPassSignature=missionSignature();missionPhase='complete';timerOn=false;missionDeadline=null;}passed=passed||mayAdvanceMission();if(passed&&!classroom.completed.includes(mission)){classroom.completed.push(mission);beep();const bar=$('.progress div');if(bar)bar.style.width=classroom.completed.length/missions.length*100+'%';}}
  if(mode==='detective'&&result?.ok&&result.active){const type=detectives[detective][3];passed=type==='reverse-led'?state.components.some(c=>c.type==='led'&&result.readings[c.id].current>=.005&&result.readings[c.id].current<=.02):state.components.some(c=>c.type==='lamp'&&Math.abs(result.readings[c.id].current)>1e-5)&&state.components.some(c=>c.type==='ammeter'&&Math.abs(result.readings[c.id].current)>1e-5);}
  const next=$('#missionNext');if(next)next.disabled=!mayAdvanceMission();$('#nextMission').disabled=!mayAdvanceMission();
  status.textContent=passed?'✓ Circuit verified!':'Build it, then press Run.';status.className=passed?'success':'pending';}
 $('#teacher').onclick=()=>{const panel=$('#teacherPanel');panel.hidden=!panel.hidden;$('#teacher').setAttribute('aria-pressed',!panel.hidden);};
-function renderTimer(){$('#timer').textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');}
-$('#minutes').onchange=()=>{const v=Math.max(1,Math.min(60,+$('#minutes').value||3));$('#minutes').value=v;remaining=v*60;timerOn=false;renderTimer();};$('#timerStart').onclick=()=>{if(remaining<=0)remaining=+$('#minutes').value*60;timerOn=true;running=true;changed();};$('#timerPause').onclick=()=>{timerOn=false;running=false;changed();};$('#timerReset').onclick=()=>{timerOn=false;remaining=+$('#minutes').value*60;renderTimer();};$('#nextMission').onclick=nextMission;$('#previousMission').onclick=backMission;$('#reveal').onclick=()=>{$('#explanation').hidden=false;$('#explanation').textContent=mode==='detective'?detectives[detective][2]:missions[mission][2];showAnswer();};
-setInterval(()=>{if(timerOn&&remaining>0){remaining--;renderTimer();if(!remaining){timerOn=false;notify('Time is up!');beep();}}},1000);
+function renderTimer(){$('#timer').textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');refreshMissionClock();}
+$('#timerStart').onclick=beginMission;$('#timerPause').onclick=pauseMission;$('#timerReset').onclick=()=>{if(missionPhase==='expired'){showDance('retry');return;}resetAttempt();changed();renderTimer();};$('#nextMission').onclick=nextMission;$('#previousMission').onclick=backMission;$('#reveal').onclick=showAnswer;
+
 $('#sound').onclick=()=>{sound=!sound;$('#sound').textContent=sound?'🔊':'🔇';$('#sound').setAttribute('aria-label',sound?'Sound on':'Sound off');$('#sound').setAttribute('aria-pressed',sound);beep();};$('#fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{notify('Fullscreen is unavailable in this browser.');}};
 // Wire flow uses KCL at each terminal, distributing cycles without inventing meter readings.
 function wireCurrents(){if(!result?.ok)return new Map();const keys=state.components.flatMap(c=>[c.id+':0',c.id+':1']),adj=new Map(keys.map(k=>[k,[]])),edges=[...state.wires];for(const c of state.components)if(c.type==='wire'||c.type==='junction')edges.push({id:'internal-'+c.id,a:c.id+':0',b:c.id+':1'});for(const e of edges){adj.get(e.a)?.push(e);adj.get(e.b)?.push(e);}const demand=new Map(keys.map(k=>[k,0]));for(const c of state.components){const i=result.readings[c.id].current||0;demand.set(c.id+':0',-i);demand.set(c.id+':1',i);}const seen=new Set(),flows=new Map();function visit(k){seen.add(k);let total=demand.get(k)||0;for(const e of adj.get(k)){const other=e.a===k?e.b:e.a;if(seen.has(other))continue;const q=visit(other);flows.set(e.id,e.a===k?-q:q);total+=q;}return total;}for(const k of keys)if(!seen.has(k))visit(k);return flows;}
 let lastFlow=0;function animate(time){requestAnimationFrame(animate);if(time-lastFlow<70)return;lastFlow=time;const g=$('#flows');g.replaceChildren();if(!running||!result?.ok||$('#flow').value==='none')return;const currents=wireCurrents(),electron=$('#flow').value==='electron';for(const w of state.wires){const i=(currents.get(w.id)||0)*(electron?-1:1);if(Math.abs(i)<1e-8)continue;const pts=wirePoints(w),lens=pts.slice(1).map((p,j)=>Math.hypot(p.x-pts[j].x,p.y-pts[j].y)),total=lens.reduce((a,b)=>a+b,0);if(total<2)continue;for(let offset=0;offset<total;offset+=85){let d=(offset+(time*.035*Math.sign(i))%total+total)%total,j=0;while(j<lens.length-1&&d>lens[j])d-=lens[j++];if(!lens[j])continue;const a=pts[j],b=pts[j+1],f=d/lens[j],x=a.x+(b.x-a.x)*f,y=a.y+(b.y-a.y)*f,angle=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI+(i<0?180:0);g.append(svgNode('path',{d:'M-7 -4L2 0L-7 4Z',transform:`translate(${x},${y}) rotate(${angle})`,class:'flow-arrow'+(electron?' electron':'')}));}}}
-try{const saved=JSON.parse(localStorage.getItem('circuitlab-v1'));if(saved&&Array.isArray(saved.state?.components)&&Array.isArray(saved.state?.wires)&&saved.state.components.every(c=>PARTS[c.type]&&typeof c.id==='string'&&Number.isFinite(c.x)&&Number.isFinite(c.y))){state=saved.state;serial=+saved.serial||1000;example=saved.example||'';if(saved.classroom&&Array.isArray(saved.classroom.names)&&Array.isArray(saved.classroom.scores)&&Array.isArray(saved.classroom.completed))classroom=saved.classroom;mission=Math.max(0,Math.min(missions.length-1,+saved.mission||0));detective=Math.max(0,Math.min(2,+saved.detective||0));mode='missions';classroom.completed=[...new Set(classroom.completed.filter(i=>Number.isInteger(i)&&i>=0&&i<missions.length))];}}catch{notify('Saved progress could not be loaded. Starting a new board.');}
-activity();changed();requestAnimationFrame(animate);
+try{const saved=JSON.parse(localStorage.getItem('circuitlab-v1'));if(saved&&Array.isArray(saved.state?.components)&&Array.isArray(saved.state?.wires)&&saved.state.components.every(c=>PARTS[c.type]&&typeof c.id==='string'&&Number.isFinite(c.x)&&Number.isFinite(c.y))){state=saved.state;serial=+saved.serial||1000;example=saved.example||'';if(saved.classroom&&Array.isArray(saved.classroom.names)&&Array.isArray(saved.classroom.scores)&&Array.isArray(saved.classroom.completed))classroom=saved.classroom;mission=Math.max(0,Math.min(missions.length-1,+saved.mission||0));detective=Math.max(0,Math.min(2,+saved.detective||0));mode='missions';if(saved.retryLocks&&typeof saved.retryLocks==='object')retryLocks=Object.fromEntries(Object.entries(saved.retryLocks).filter(([k,v])=>Number.isInteger(+k)&&+k>=0&&+k<missions.length&&v===true));classroom.completed=[...new Set(classroom.completed.filter(i=>Number.isInteger(i)&&i>=0&&i<missions.length))];if(saved.attempt&&['ready','running','paused','complete','expired'].includes(saved.attempt.phase)){missionPhase=saved.attempt.phase;remaining=Math.max(0,Math.min(90,+saved.attempt.remaining||0));missionDeadline=Number.isFinite(saved.attempt.deadline)?saved.attempt.deadline:null;if(missionPhase==='running'&&missionDeadline!==null){remaining=Math.max(0,Math.ceil((missionDeadline-Date.now())/1000));timerOn=remaining>0;running=remaining>0;if(!remaining)missionPhase='expired';}else if(missionPhase==='running'){missionPhase='ready';remaining=90;}if(missionPhase==='complete')missionPassSignature=missionSignature();}}}catch{notify('Saved progress could not be loaded. Starting a new board.');}
+if(retryLocks[mission]){missionPhase='expired';remaining=0;timerOn=false;running=false;missionDeadline=null;}activity();changed();renderTimer();if(missionPhase==='expired')showDance('retry');requestAnimationFrame(animate);
