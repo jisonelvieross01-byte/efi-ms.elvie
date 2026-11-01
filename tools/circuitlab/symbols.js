@@ -1,22 +1,22 @@
 'use strict';
 const PARTS={
- cell:{name:'Cell',value:3,unit:'V',range:[1,12,.5],info:'One source of electrical energy. The long line is positive.'},
- battery:{name:'Battery',value:6,unit:'V',range:[1,24,.5],info:'Two or more cells. Supplies energy to charges.'},
- supply:{name:'DC supply',value:6,unit:'V',range:[1,24,.5],info:'An adjustable direct-current voltage source.'},
- switch:{name:'Switch',info:'Opens or closes a conducting path. Double-tap to toggle.'},
- resistor:{name:'Fixed resistor',value:100,unit:'Ω',range:[1,1000,1],info:'Limits current. A fixed resistor obeys V = IR at constant temperature.'},
- variable:{name:'Variable resistor',value:100,unit:'Ω',range:[1,1000,1],info:'Move its slider to change resistance and current.'},
- lamp:{name:'Filament lamp',value:20,unit:'Ω',range:[1,200,1],info:'Lights when current flows. Here its resistance is fixed; real hot filaments have greater resistance.'},
- ammeter:{name:'Ammeter',info:'Measures current in amperes. Connect in series. Ideal model: zero resistance.'},
- voltmeter:{name:'Voltmeter',info:'Measures potential difference in volts. Connect in parallel. Ideal model: infinite resistance.'},
- fuse:{name:'Fuse',value:1,unit:'Ω',range:[.1,10,.1],info:'A real fuse melts at excessive current. This 1 Ω demonstration model warns above 1 A; it does not melt automatically.'},
- capacitor:{name:'Capacitor',info:'Stores charge. At DC steady state it is an open circuit. Charging transients are not simulated.'},
- diode:{name:'Diode',info:'Conducts from anode (left) to cathode (bar). Model: 0.7 V forward drop plus 1 Ω; reverse current is zero.'},
- led:{name:'LED',info:'Emits light with forward current. Model: 1.8 V forward drop plus 1 Ω. Use a series resistor; keep current below 30 mA.'},
- thermistor:{name:'NTC thermistor',value:100,unit:'Ω',range:[10,1000,10],info:'Resistance falls as temperature rises. Set measured resistance here; no temperature law is assumed.'},
- ldr:{name:'LDR',value:500,unit:'Ω',range:[10,2000,10],info:'Resistance falls in brighter light. Set measured resistance here; no light calibration is assumed.'},
- junction:{name:'Wire junction',info:'The dot joins all attached wires. Both terminals are the same electrical node.'},
- wire:{name:'Connecting wire',info:'An ideal conductor with zero resistance. You can also connect any two terminal circles directly.'}
+ cell:{name:'Cell',value:3,unit:'V',range:[1,12,.5],info:'Gives energy. Long line = +.'},
+ battery:{name:'Battery',value:6,unit:'V',range:[1,24,.5],info:'Two or more cells together.'},
+ supply:{name:'DC supply',value:6,unit:'V',range:[1,24,.5],info:'Adjustable DC voltage.'},
+ switch:{name:'Switch',info:'Turns the path on or off. Double-tap to flip.'},
+ resistor:{name:'Resistor',value:100,unit:'Ω',range:[1,1000,1],info:'Limits current. V = IR.'},
+ variable:{name:'Variable resistor',value:100,unit:'Ω',range:[1,1000,1],info:'Slide to change resistance.'},
+ lamp:{name:'Lamp',value:20,unit:'Ω',range:[1,200,1],info:'Lights when current flows. Fixed resistance here.'},
+ ammeter:{name:'Ammeter',info:'Measures current (A). Put it in series.'},
+ voltmeter:{name:'Voltmeter',info:'Measures voltage (V). Put it in parallel.'},
+ fuse:{name:'Fuse',value:1,unit:'Ω',range:[.1,10,.1],info:'Warns above 1 A. Does not melt here.'},
+ capacitor:{name:'Capacitor',info:'Stores charge. Blocks steady DC.'},
+ diode:{name:'Diode',info:'One-way: flows toward the bar. 0.7 V drop.'},
+ led:{name:'LED',info:'Lights one way. Add a resistor. Keep under 30 mA.'},
+ thermistor:{name:'Thermistor',value:100,unit:'Ω',range:[10,1000,10],info:'Hotter = less resistance.'},
+ ldr:{name:'LDR',value:500,unit:'Ω',range:[10,2000,10],info:'Brighter light = less resistance.'},
+ junction:{name:'Junction',info:'Joins wires at one point.'},
+ wire:{name:'Wire',info:'Zero resistance. Or just join two dots.'}
 };
 function symbol(type,closed=false){
  let body='';const line='<path d="M-50 0H-24 M24 0H50"/>';

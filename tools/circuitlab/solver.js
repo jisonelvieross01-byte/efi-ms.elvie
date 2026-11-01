@@ -29,7 +29,7 @@ function solve(circuit){
  // Short detection treats ideal ammeters as wires, without hiding their measured branch currents.
  const sp=new Map(nodes.map(n=>[n,n]));const sf=n=>sp.get(n)===n?n:sf(sp.get(n));
  for(const c of cs)if(c.type==='ammeter'||c.type==='switch'&&c.closed){const [a,b]=ends(c);sp.set(sf(a),sf(b));}
- for(const c of cs)if(source(c)){const [a,b]=ends(c);if(sf(a)===sf(b))return {ok:false,short:true,readings:{},messages:['Short circuit: a wire or ammeter directly joins a source’s + and − terminals. Remove that path before measuring.']};}
+ for(const c of cs)if(source(c)){const [a,b]=ends(c);if(sf(a)===sf(b))return {ok:false,short:true,readings:{},messages:['⚠ Short circuit! + and − are joined directly. Remove that wire or ammeter.']};}
  let solution=null;
  for(let mask=0;mask<2**diodes.length;mask++){
   const branches=[];
@@ -62,17 +62,17 @@ function solve(circuit){
   let current=br?(br.r?(potential(a)-potential(b)-br.e)/br.r:x[unknown.length+ideal.indexOf(br)]):0;
   if(c.type==='wire'||c.type==='junction')current=null;
   readings[c.id]={voltage,current,power:voltage===null||current===null?null:voltage*current,connected:same};
-  if(c.type==='voltmeter'&&!same)messages.push('Voltmeter: its terminals are on separate floating sections. Connect it in parallel across a component.');
+  if(c.type==='voltmeter'&&!same)messages.push('Voltmeter: connect it across a part (in parallel).');
   const used=t=>wires.some(w=>w.a===c.id+':'+t||w.b===c.id+':'+t);
-  if(!used(0)||!used(1))messages.push(c.type+': a terminal is disconnected.');
-  if(c.type==='fuse'&&Math.abs(current)>1)messages.push('Fuse exceeds the 1 A demonstration rating. Open the switch; this steady-state model does not automatically melt the fuse.');
-  if(c.type==='led'&&Math.abs(current)>.03)messages.push('LED current exceeds 30 mA. Add a series resistor to protect a real LED.');
+  if(!used(0)||!used(1))messages.push(c.type+': one end is not connected.');
+  if(c.type==='fuse'&&Math.abs(current)>1)messages.push('⚠ Fuse is over 1 A. Open the switch.');
+  if(c.type==='led'&&Math.abs(current)>.03)messages.push('⚠ LED over 30 mA. Add a resistor.');
  }
- for(const meter of cs.filter(c=>c.type==='ammeter')){const [a,b]=ends(meter);for(const load of cs.filter(resist)){const [u,v]=ends(load);if(a!==b&&(a===u&&b===v||a===v&&b===u))messages.push('Ammeter bypasses a load. Connect it in series with that load, not in parallel.');}}
+ for(const meter of cs.filter(c=>c.type==='ammeter')){const [a,b]=ends(meter);for(const load of cs.filter(resist)){const [u,v]=ends(load);if(a!==b&&(a===u&&b===v||a===v&&b===u))messages.push('Ammeter goes in series, not across a part.');}}
  const active=cs.some(c=>source(c)&&Math.abs(readings[c.id].current)>1e-8);
- if(!cs.some(source))messages.unshift('Add a cell, battery or power supply.');
- else if(!active)messages.unshift('No sustained current: the circuit is open, a switch is open, or a diode blocks the path.');
- else messages.unshift('Closed conducting path: Kirchhoff’s laws and Ohm’s law are satisfied.');
+ if(!cs.some(source))messages.unshift('Add a battery or cell.');
+ else if(!active)messages.unshift('No current. Is the loop open, a switch off, or a diode backwards?');
+ else messages.unshift('✓ Current is flowing.');
  return {ok:true,active,readings,messages:[...new Set(messages)],nodes:Object.fromEntries([...parent.keys()].map(n=>[n,find(n)]))};
  }catch(e){return {ok:false,readings:{},messages:[e.message]};}
 }
