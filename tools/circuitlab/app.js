@@ -294,14 +294,14 @@ function renderGuide(){
 }
 // Help follows active attempt time; pausing does not advance either unlock.
 function helpAvailable(kind){
- return missionPhase==='complete'||(missionPhase!=='ready'&&remaining<=(kind==='hint'?30:40));
+ return missionPhase==='complete'||(missionPhase!=='ready'&&remaining<=(kind==='hint'?90:40));
 }
 function refreshHelpAvailability(){
  for(const [id,kind,label] of [['hint','hint','Hint'],['showAnswer','answer','Show answer'],['reveal','answer','Show answer']]){
   const button=$('#'+id),available=helpAvailable(kind);
   button.disabled=!available;
-  button.textContent=available?(kind==='hint'&&guideVisible?'Hide hint':label):label+' · '+Math.max(0,remaining-(kind==='hint'?30:40))+'s';
-  button.title=available?label:(kind==='hint'?'Hint opens after 1 minute 30 seconds.':'Show answer opens with 40 seconds left.');
+  button.textContent=available?(kind==='hint'&&guideVisible?'Hide hint':label):label+' · '+Math.max(0,remaining-(kind==='hint'?90:40))+'s';
+  button.title=available?label:(kind==='hint'?'Hint opens with 1 minute 30 seconds left.':'Show answer opens with 40 seconds left.');
  }
 }
 function showAnswer(){tickMissionClock();if(helpAvailable('answer'))revealAnswer();}

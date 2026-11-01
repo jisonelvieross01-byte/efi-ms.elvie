@@ -188,7 +188,7 @@ dialog::backdrop{background:#0f2a3a88;backdrop-filter:blur(3px)}
 #missionBack,#missionNext{min-height:40px}
 @media(max-width:1100px){#modes{order:initial;flex-basis:auto;margin-left:auto;margin-right:0}}
 
-/* Every mission begins deliberately with its own 90-second clock. */
+/* Every mission begins deliberately with its own two-minute clock. */
 .mission-start{position:absolute;inset:0;z-index:2;background:#ffffffeb;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
 .mission-start[hidden]{display:none}
 .mission-start h2{font-size:30px;color:var(--navy)}

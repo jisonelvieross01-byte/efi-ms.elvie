@@ -6,4 +6,4 @@ instant answer help and a diagram-based exit ticket. The complete course has
 25 questions (one teacher demo plus 24 student tasks), with two minutes each.
 There are no calculations, parameter adjustments, dances or penalties.
 
-Hint unlocks after 1 minute 30 seconds (30 seconds left). Show answer unlocks with 40 seconds left. Both stay available after time runs out; completed questions allow review.
+Hint unlocks after 30 seconds (1 minute 30 seconds left). Show answer unlocks with 40 seconds left. Both stay available after time runs out; completed questions allow review.

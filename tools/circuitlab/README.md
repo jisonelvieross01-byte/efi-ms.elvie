@@ -124,4 +124,4 @@ They cover all 25 diagrams, broken connections, no numeric targets/settings,
 timed help unlocks, the real teacher demo, reward correctness, two-minute timeouts,
 save migration, touch wiring, rotation and 375/960/1920 layouts.
 
-Hint unlocks after 1 minute 30 seconds (30 seconds left). Show answer unlocks with 40 seconds left. Both stay available after time runs out; completed questions allow review.
+Hint unlocks after 30 seconds (1 minute 30 seconds left). Show answer unlocks with 40 seconds left. Both stay available after time runs out; completed questions allow review.

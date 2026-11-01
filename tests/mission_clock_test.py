@@ -1,4 +1,4 @@
-"""Help unlocks after 80/90 active seconds; expiry has no punishment."""
+"""Help unlocks after 30/80 active seconds; expiry has no punishment."""
 from pathlib import Path
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
 from functools import partial
@@ -19,26 +19,27 @@ with sync_playwright() as p:
   assert page.locator('#showAnswer').is_disabled()==answer
   assert page.locator('#reveal').is_disabled()==answer
  locked(True,True)
- assert '90s' in page.locator('#hint').inner_text()
+ assert '30s' in page.locator('#hint').inner_text()
  assert '80s' in page.locator('#showAnswer').inner_text()
  page.clock.fast_forward(180000);assert page.evaluate('remaining')==120
  # Function calls and teacher Reveal obey the same lock as the board button.
  page.evaluate('showAnswer()');assert page.locator('#answerDialog').is_hidden()
- page.locator('#missionStart').click();page.clock.fast_forward(79000)
- assert page.evaluate('remaining')==41;locked(True,True)
+ page.locator('#missionStart').click();page.clock.fast_forward(29000)
+ assert page.evaluate('remaining')==91;locked(True,True)
  page.locator('#teacher').click();page.locator('#timerPause').click();page.clock.fast_forward(30000)
- assert page.evaluate('remaining')==41;locked(True,True)
+ assert page.evaluate('remaining')==91;locked(True,True)
  page.locator('#missionStart').click();page.clock.fast_forward(1000)
- assert page.evaluate('remaining')==40;locked(True,False)
+ assert page.evaluate('remaining')==90;locked(False,True)
+ page.reload();locked(False,True)
+ page.locator('#hint').click();assert page.locator('#hintLayer [data-guide-part]').count()==2
+ page.evaluate('showAnswer()');assert page.locator('#answerDialog').is_hidden()
+ page.clock.fast_forward(49000);assert page.evaluate('remaining')==41;locked(False,True)
+ page.clock.fast_forward(1000);assert page.evaluate('remaining')==40;locked(False,False)
  page.locator('#showAnswer').click();assert page.locator('#answerDialog').is_visible()
  page.locator('#closeAnswer').click()
- page.clock.fast_forward(9000);assert page.evaluate('remaining')==31;locked(True,False)
- page.reload();locked(True,False)
- page.clock.fast_forward(1000);assert page.evaluate('remaining')==30;locked(False,False)
- page.locator('#hint').click();assert page.locator('#hintLayer [data-guide-part]').count()==2
  page.locator('#teacher').click();page.locator('#reveal').click()
  assert page.locator('#answerDialog').is_visible()
- page.clock.fast_forward(30000);assert page.evaluate('missionPhase')=='expired'
+ page.clock.fast_forward(40000);assert page.evaluate('missionPhase')=='expired'
  assert page.locator('#answerDialog').is_visible();locked(False,False)
  page.locator('#closeAnswer').click()
  assert page.locator('#missionNext').is_disabled()
@@ -59,4 +60,4 @@ with sync_playwright() as p:
  assert not errors,errors
  browser.close()
 server.shutdown()
-print('PASS: exact 80/90-second help unlocks, pause/resume, reload, teacher Reveal lock, expiry, review, reset and navigation; two-minute attempts and no penalties.')
+print('PASS: exact 30/80-second help unlocks, pause/resume, reload, teacher Reveal lock, expiry, review, reset and navigation; two-minute attempts and no penalties.')
