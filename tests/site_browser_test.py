@@ -1,5 +1,6 @@
 """Website integration checks using Chromium, with non-local network blocked."""
 from pathlib import Path
+from completion_helpers import auto_dismiss_completion
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
 from functools import partial
 from threading import Thread
@@ -13,6 +14,7 @@ with sync_playwright() as p:
  context=browser.new_context(viewport={'width':1920,'height':1080},has_touch=True,accept_downloads=True)
  context.route('**/*',lambda r:r.continue_() if r.request.url.startswith(URL) else r.abort())
  page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+ auto_dismiss_completion(page)
  page.goto(URL);assert page.locator('.tool-card').count()==1
  assert page.locator('#toolCount').inner_text()=='1 classroom tool'
  page.locator('#search').fill('circuit');assert page.locator('.tool-card').count()==1

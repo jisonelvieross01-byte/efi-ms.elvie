@@ -1,5 +1,6 @@
 """Physical SVG appearance must preserve circuit topology, touch behavior and offline use."""
 from pathlib import Path
+from completion_helpers import auto_dismiss_completion
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
 from functools import partial
 from threading import Thread
@@ -12,6 +13,7 @@ with sync_playwright() as p:
  context=browser.new_context(viewport={'width':1920,'height':1080},has_touch=True)
  page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  context.route('**/*',lambda r:r.continue_() if r.request.url.startswith('http://127.0.0.1:') else r.abort())
+ auto_dismiss_completion(page)
  page.goto(f'http://127.0.0.1:{server.server_port}/tools/circuitlab/index.html')
  page.locator('#missionStart').click()
  # Palette stays IEC; placed parts are physical by default.

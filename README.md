@@ -63,7 +63,7 @@ Browser tests need Python Playwright and system Chromium (`/usr/bin/chromium`).
 These are development dependencies only. They start their own temporary local
 servers. Static checks ensure all HTML links resolve and downloads are bundled.
 Numerical tests exercise 17 circuit cases; integration tests cover touchscreen
-controls, all twenty-four mission validators, the catalog, imports, downloads and layouts.
+controls, all 25 symbol-question validators, the catalog, imports, downloads and layouts.
 
 ## Storage and privacy
 
@@ -77,6 +77,12 @@ library origin and restrict external resource loading; only import trusted files
 CircuitLab uses an explicitly labelled DC steady-state model. See the in-app
 model panel and `tools/circuitlab/README.md` for its scientific limitations.
 
-CircuitLab includes a locally bundled CC0 full-body 3D robot dance with a five-second
-viewing gate and no PIN. The build versions CSS/JS by content hash. See
-`tools/circuitlab/vendor/ASSETS.md` for asset provenance and optional renderer rebuild steps.
+CircuitLab now has one teacher demonstration and 24 simple student questions,
+two-minute timers, immediate answers and no numerical adjustment controls.
+The congratulations popup appears only for a verified circuit. No dance or
+penalty features, third-party runtime assets or development dependencies are needed.
+
+CircuitLab has a teacher demonstration followed by 24 simple student questions,
+two-minute attempts, immediate answers and a verified-answer achievement popup.
+All dance assets, viewing gates, penalties and student numerical adjustment
+controls have been removed. No npm packages are needed.

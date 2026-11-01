@@ -6,53 +6,55 @@ let state={components:[],wires:[]},selected=null,armed=null,placing=null,tool='s
 let missionPassSignature='';
 function missionSignature(){return mission+':'+JSON.stringify(state);}
 function mayAdvanceMission(){return missionPhase==='complete'&&(mode==='missions'||mode==='challenge')&&missionPassSignature===missionSignature();}
-let classroom={names:['Pair 1','Pair 2'],scores:[0,0],completed:[],awarded:[]},remaining=90,timerOn=false;
+let classroom={names:['Pair 1','Pair 2'],scores:[0,0],completed:[],awarded:[]},remaining=120,timerOn=false;
+const COURSE_VERSION='symbols-25-v1';
 const missions=[
- ['Light a lamp','Join a battery and a lamp in a loop.','Charges need a complete path back to the source.','lamp'],
- ['Take control','Light a lamp with a closed switch.','A closed switch completes a path; an open switch interrupts it.','switch'],
- ['Read the current','Light a lamp. Add an ammeter in series.','An ammeter carries the same current as the lamp in series.','ammeter'],
- ['Measure voltage','Light a lamp. Add a voltmeter across it.','A parallel voltmeter compares the potential at both ends of the lamp.','voltmeter'],
- ['Share the voltage','6 V battery + two 100 Ω resistors in series.','Total resistance is 200 Ω. Current is 0.030 A; each resistor has 3 V.','series'],
- ['Make two paths','6 V battery + two 100 Ω resistors in parallel.','Each branch has 6 V and 0.060 A. The source supplies 0.120 A.','parallel'],
- ['Tune the current','Use a variable resistor. Set lamp current to 0.020–0.040 A.','Increasing series resistance reduces the current for a fixed source voltage.','variable'],
- ['Protect an LED','Light an LED (5–20 mA) with a resistor in series.','An LED needs correct polarity and a resistor to limit its current.','led'],
- ['Sense it','Lamp + LDR or thermistor in series.','A sensor changes resistance. That changes current in a series circuit.','sensor'],
- ['Bring it together','Lamp + switch + ammeter + voltmeter, all correct.','Current is measured in series; potential difference is measured in parallel.','all'],
- ['Check Ohm’s law','6 V battery + 100 Ω resistor + ammeter in series.','6 V ÷ 100 Ω = 0.060 A.','ohm'],
- ['Lower the current','6 V battery + 200 Ω resistor + ammeter in series.','Doubling resistance halves the current to 0.030 A.','lowcurrent'],
- ['Use one cell','Light a 20 Ω lamp with a 3 V cell.','3 V ÷ 20 Ω = 0.150 A.','celllamp'],
- ['Two lamps in series','6 V battery + two 20 Ω lamps in series.','Both lamps carry 0.150 A and share the 6 V.','serieslamps'],
- ['Two lamp branches','6 V battery + two 20 Ω lamps in parallel.','Each lamp has 6 V and carries 0.300 A.','parallellamps'],
- ['Tune an LDR','6 V battery + 20 Ω lamp + LDR; set current to 0.030 A.','Set the LDR to 180 Ω for a total resistance of 200 Ω.','ldrtarget'],
- ['Try a thermistor','6 V battery + 20 Ω lamp + 100 Ω thermistor in series.','6 V ÷ 120 Ω = 0.050 A.','thermistortarget'],
- ['Turn a diode','6 V battery + 100 Ω resistor + forward diode.','The simplified diode model gives about 0.0525 A.','forwarddiode'],
- ['Add a fuse','6 V battery + 1 Ω fuse + 100 Ω resistor in series.','About 0.0594 A flows, below the demonstration fuse rating.','fusepath'],
- ['Full toolkit','Use a switch, variable resistor, lamp and both meters; set 0.020–0.040 A.','Use series current measurement, parallel voltage measurement and a closed switch.','master'],
- ['Share it unequally','6 V + 100 Ω and 200 Ω in series; measure across 200 Ω.','The current is 0.020 A; the 200 Ω resistor has 4 V.','unequalseries'],
- ['Unequal branches','6 V + 100 Ω and 200 Ω in parallel.','The branches carry 0.060 A and 0.030 A; the source supplies 0.090 A.','unequalparallel'],
- ['Switch an LED','Light an LED with a closed switch and a 330 Ω resistor at 6 V.','A closed series switch gives about 12.69 mA; opening it stops the current.','ledswitch'],
- ['Final check','6 V + 300 Ω resistor; add both meters correctly.','The series ammeter reads 0.020 A; the parallel voltmeter reads 6 V.','finalcheck']
+ ['Teacher demo','Teacher: join the last wire to light the lamp.','A complete loop lets the lamp light.','teacher'],
+ ['Cell and lamp','Join a cell and a lamp in a loop.','The cell symbol has one long line and one short line.','celllamp'],
+ ['Battery and lamp','Join a battery and a lamp in a loop.','A battery symbol shows more than one cell.','batterylamp'],
+ ['Close a switch','Add a closed switch to a lamp circuit.','A closed switch completes the path.','switch'],
+ ['Open a switch','Make a lamp circuit with an open switch.','An open switch breaks the path, so the lamp is off.','openswitch'],
+ ['One resistor','Join a cell and a resistor in a loop.','The rectangle is the resistor symbol.','resistor'],
+ ['Resistor and lamp','Put a resistor and a lamp in the same loop.','Parts in one loop are connected in series.','resistorlamp'],
+ ['Variable resistor','Add a variable resistor to a lamp circuit.','Its arrow shows that its resistance can change.','variable'],
+ ['Add an ammeter','Put an ammeter in series with a lamp.','The A meter goes in the same path as the lamp.','ammeter'],
+ ['Add a voltmeter','Put a voltmeter across a lamp.','The V meter connects across the two ends of the lamp.','voltmeter'],
+ ['Two lamps','Connect two lamps in one loop.','Series lamps share the same path.','serieslamps'],
+ ['Two branches','Connect two lamps on separate branches.','Each parallel branch connects to the same two points.','parallellamps'],
+ ['Add a fuse','Put a fuse in series with a lamp.','The fuse symbol has a line inside a small rectangle.','fuse'],
+ ['Find the diode','Connect a cell, a resistor and a forward diode.','The bar marks the diode’s cathode end.','diode'],
+ ['Light an LED','Connect a cell, a resistor and a forward LED.','An LED symbol has two arrows pointing out.','led'],
+ ['Thermistor','Put a thermistor in series with a lamp.','The thermistor symbol marks a temperature-sensitive resistor.','thermistor'],
+ ['LDR','Put an LDR in series with a lamp.','The inward arrows show light falling on the LDR.','ldr'],
+ ['Capacitor','Join a cell, a capacitor and a resistor in a loop.','The two parallel plates are a capacitor; steady DC stops here.','capacitor'],
+ ['Use a junction','Use a junction dot to split a circuit into two lamp branches.','A dot marks wires that are joined.','junction'],
+ ['Power supply','Join a DC supply and a lamp in a loop.','A DC supply can replace a cell in a circuit diagram.','supplylamp'],
+ ['Turn a symbol','Rotate a part, then make a cell-and-lamp loop.','Turning a symbol does not change the component.','rotate'],
+ ['Switch and resistor','Make one loop with a switch, resistor and lamp.','Close the switch to complete the loop.','switchresistor'],
+ ['Current meter','Add an ammeter to a loop with two lamps in series.','The ammeter belongs in the main path.','seriesammeter'],
+ ['Two meters','Measure a lamp with an ammeter and a voltmeter.','A goes in series; V goes across the lamp.','twometers'],
+ ['Final diagram','Build a lamp circuit with a switch and both meters.','Close the switch; put A in series and V across the lamp.','final']
 ];
 const detectives=[['A meter blocks the way','The lamp stays dark. Check the meter.','A voltmeter has infinite resistance. Replace the series voltmeter with an ammeter.','series-meter'],['A dangerous shortcut','The ammeter is across the battery. Fix it.','Never place an ammeter directly across a source. Put it in series with the load.','short-meter'],['The backwards LED','The LED stays dark. Fix its direction.','An LED conducts only from anode to cathode. Reconnect its anode towards the source’s + terminal and its cathode towards −. Rotation changes the drawing, not the attached wire ends.','reverse-led']];
 function notify(text){$('#toast').textContent=text;$('#toast').classList.add('show');clearTimeout(notify.t);notify.t=setTimeout(()=>$('#toast').classList.remove('show'),2600);}
 function beep(){if(!sound)return;try{const ac=new (window.AudioContext||window.webkitAudioContext)(),o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);g.gain.value=.025;o.frequency.value=660;o.start();o.stop(ac.currentTime+.1);o.onended=()=>ac.close();}catch{}}
-// A wall-clock deadline keeps a 90-second attempt accurate across slow frames and reloads.
-const MISSION_SECONDS=90;
-let missionPhase='ready',missionDeadline=null,retryLocks={};
-function resetAttempt(){missionPhase=retryLocks[mission]?'expired':'ready';missionDeadline=null;remaining=retryLocks[mission]?0:MISSION_SECONDS;timerOn=false;running=false;result=null;missionPassSignature='';}
+// A wall-clock deadline keeps a two-minute attempt accurate across slow frames and reloads.
+const MISSION_SECONDS=120;
+let missionPhase='ready',missionDeadline=null;
+function resetAttempt(){missionPhase='ready';missionDeadline=null;remaining=MISSION_SECONDS;timerOn=false;running=false;result=null;missionPassSignature='';completionAnnounced=false;$('#completionDialog').close();}
 function refreshMissionClock(){
  const locked=missionPhase==='ready'||missionPhase==='paused'||missionPhase==='expired';
  $('#missionStartOverlay').hidden=!locked;
- $('#missionStart').textContent=missionPhase==='expired'?'Retry move':missionPhase==='paused'?'Resume':'Start';
+ $('#missionStart').textContent=missionPhase==='expired'?'Try again':missionPhase==='paused'?'Resume':'Start';
  $('#missionStartTitle').textContent=missionPhase==='expired'?'Time’s up':missionPhase==='paused'?'Paused':'Ready?';
- $('#missionStartNote').textContent=missionPhase==='expired'?'Copy your saved dance to try again.':'1 minute 30 seconds for this mission.';
- $('#run').disabled=missionPhase==='expired';
+ $('#missionStartNote').textContent=missionPhase==='expired'?'Show answer can help, or try again.':'Two minutes for this question.';
+ $('#run').disabled=false;
  $('#missionClock').textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');
  $('#missionClock').classList.toggle('time-low',remaining<=15&&missionPhase==='running');$('#missionTimeBar').value=remaining;$('#missionClockCard').dataset.phase=missionPhase;$('#missionClockState').textContent=({ready:'Press Start or Run',running:'Counting down',paused:'Teacher pause',complete:'Verified',expired:'Time’s up'})[missionPhase];
  $('#missionClock').setAttribute('aria-label',remaining+' seconds remaining');
 }
 function beginMission(){
- if(missionPhase==='expired'){showDance('retry');return;}
+ if(missionPhase==='expired')resetAttempt();
  if(missionPhase==='complete'){running=true;changed();return;}
  missionPhase='running';missionDeadline=Date.now()+remaining*1000;timerOn=true;running=true;changed();renderTimer();
 }
@@ -62,8 +64,8 @@ function pauseMission(){
 }
 function expireMission(){
  if(missionPhase!=='running')return;
- retryLocks[mission]=true;missionPhase='expired';remaining=0;timerOn=false;missionDeadline=null;running=false;result=null;missionPassSignature='';cancelWireGesture();drag=null;
- $('#answerDialog').close();$('#explanation').hidden=true;changed();renderTimer();showDance('retry');beep();
+ missionPhase='expired';remaining=0;timerOn=false;missionDeadline=null;running=false;result=null;missionPassSignature='';cancelWireGesture();drag=null;
+ changed();renderTimer();notify('Time’s up. Show answer can help.');beep();
 }
 function tickMissionClock(){
  if(missionPhase!=='running'||!timerOn||missionDeadline===null)return;
@@ -71,11 +73,10 @@ function tickMissionClock(){
  if(next!==remaining){remaining=next;renderTimer();persist();}
  if(remaining===0)expireMission();
 }
-function retryMission(){delete retryLocks[mission];resetAttempt();changed();renderTimer();notify('Ready for another try');}
 $('#missionStart').onclick=beginMission;
 setInterval(tickMissionClock,100);
 
-function persist(){try{localStorage.setItem('circuitlab-v1',JSON.stringify({state,classroom,mission,detective,mode,serial,example,retryLocks,attempt:{phase:missionPhase,remaining,deadline:missionDeadline}}));$('#saveStatus').textContent='Saved';}catch{$('#saveStatus').textContent='Not saved — keep this tab open';}}
+function persist(){try{localStorage.setItem('circuitlab-v1',JSON.stringify({state,classroom,mission,detective,mode,serial,example,courseVersion:COURSE_VERSION,attempt:{phase:missionPhase,remaining,deadline:missionDeadline,limit:MISSION_SECONDS}}));$('#saveStatus').textContent='Saved';}catch{$('#saveStatus').textContent='Not saved — keep this tab open';}}
 function checkpoint(){history.push(JSON.stringify(state));if(history.length>80)history.shift();future=[];}
 function changed(){if(missionPhase==='running'&&missionDeadline!==null&&Date.now()>=missionDeadline){expireMission();return;}result=running?CircuitSolver.solve(state):null;renderBoard();renderReadings();validate();refreshMissionClock();persist();$('#undo').disabled=!history.length;$('#redo').disabled=!future.length;}
 function part(type,x,y,value){return {id:'p'+(++serial),type,x,y,rotation:0,value:value??PARTS[type].value,closed:false};}
@@ -120,7 +121,7 @@ function renderBoard(){
   const shape=svgNode('g');shape.innerHTML=componentView==='physical'?physicalPart(c,rr):symbol(c.type,c.closed);
   if(componentView==='symbols'&&rr&&(c.type==='lamp'&&rr.power>1e-8||c.type==='led'&&rr.current>1e-5))sym.append(svgNode('circle',{r:28,fill:'var(--orange)',opacity:Math.min(.85,Math.max(.1,(rr.power||0)/1.8)),stroke:'none'}));
   sym.append(shape);g.append(sym);
-  const label=svgNode('text',{y:48,'text-anchor':'middle',class:'part-label'});label.textContent=PARTS[c.type].name+(c.value!==undefined?' · '+c.value+' '+PARTS[c.type].unit:'');g.append(label);
+  const label=svgNode('text',{y:48,'text-anchor':'middle',class:'part-label'});label.textContent=PARTS[c.type].name;g.append(label);
   for(let t=0;t<2;t++){const p=terminal(c,t);const hit=svgNode('circle',{cx:p.x-c.x,cy:p.y-c.y,r:24,fill:'transparent','data-terminal':c.id+':'+t});g.append(hit);g.append(svgNode('circle',{cx:p.x-c.x,cy:p.y-c.y,r:7,class:'terminal'+(armed===c.id+':'+t?' armed':''),'data-terminal':c.id+':'+t}));}
   if(selected===c.id){const control=svgNode('g',{'data-rotate-part':c.id,class:'part-rotate',role:'button',tabindex:'0','aria-label':'Rotate '+PARTS[c.type].name});control.append(svgNode('rect',{x:-38,y:-80,width:76,height:40,rx:12}));const text=svgNode('text',{x:0,y:-55,'text-anchor':'middle'});text.textContent='↻ Rotate';control.append(text);g.append(control);}
   cg.append(g);
@@ -147,9 +148,7 @@ function renderInspector(){const box=$('#inspector');box.replaceChildren();const
  const wire=state.wires.find(w=>w.id===selected);if(wire){box.innerHTML='<h3>Wire</h3><p>Drag an end to reconnect; drag the middle to stretch.</p>';const reset=document.createElement('button');reset.textContent='Auto route';reset.onclick=()=>{if(wire.bend){checkpoint();delete wire.bend;changed();}};box.append(reset);return;}
  if(!c){box.innerHTML='<h3>Settings</h3><p>Tap a part to change it.</p>';return;}
  const p=PARTS[c.type],h=document.createElement('h3');h.textContent=p.name;const info=document.createElement('p');info.textContent=p.info;box.append(h);const ref=document.createElement('details');const title=document.createElement('summary');title.textContent='Circuit symbol';ref.append(title);const diagram=document.createElement('div');diagram.className='symbol-reference';diagram.innerHTML=icon(c.type);ref.append(diagram,info);box.append(ref);
- if(p.range){const l=document.createElement('label');l.textContent=`${c.type==='cell'||c.type==='battery'||c.type==='supply'?'Voltage':'Resistance'}: ${c.value} ${p.unit}`;const input=document.createElement('input');input.type='range';[input.min,input.max,input.step]=p.range;input.value=c.value;input.setAttribute('aria-label',p.name+' '+p.unit);input.onpointerdown=()=>checkpoint();input.onkeydown=e=>{if(e.key.startsWith('Arrow'))checkpoint();};input.oninput=()=>{c.value=+input.value;l.firstChild.textContent=`${p.unit==='V'?'Voltage':'Resistance'}: ${c.value} ${p.unit}`;result=running?CircuitSolver.solve(state):null;renderBoard();validate();persist();};input.onchange=changed;l.append(input);box.append(l);}
  if(c.type==='switch'){const b=document.createElement('button');b.textContent=c.closed?'On · tap to turn off':'Off · tap to turn on';b.onclick=()=>{checkpoint();c.closed=!c.closed;changed();};box.append(b);}
- if(c.type==='fuse'){const b=document.createElement('button');b.textContent=c.blown?'Open fuse · restore':'Open fuse manually';b.onclick=()=>{checkpoint();c.blown=!c.blown;changed();};box.append(b);}
  const r=result?.ok?result.readings[c.id]:null;if(r){const reading=document.createElement('p');reading.textContent=`ΔV = ${fmt(r.voltage,'V')} · I = ${fmt(r.current,'A')} · P = ${fmt(r.power,'W')}`;box.append(reading);}
 }
 function point(ev){const p=$('#board').createSVGPoint();p.x=ev.clientX;p.y=ev.clientY;return p.matrixTransform($('#board').getScreenCTM().inverse());}
@@ -227,7 +226,7 @@ $('#rotate').onclick=rotate;$('#delete').onclick=remove;$('#clear').onclick=()=>
 $('#undo').onclick=()=>{if(history.length){future.push(JSON.stringify(state));state=JSON.parse(history.pop());selected=armed=null;changed();}};
 $('#redo').onclick=()=>{if(future.length){history.push(JSON.stringify(state));state=JSON.parse(future.pop());selected=armed=null;changed();}};
 $('#selectTool').onclick=()=>{tool='select';placing=null;armed=null;renderBoard();};$('#wireTool').onclick=()=>{tool='wire';placing=null;renderBoard();notify('Drag from one dot to another');};
-$('#run').onclick=()=>{if(missionPhase==='ready'||missionPhase==='paused'){beginMission();return;}if(missionPhase!=='running'&&missionPhase!=='complete')return;running=true;changed();};$('#pause').onclick=()=>{running=false;changed();};
+$('#run').onclick=()=>{if(missionPhase==='ready'||missionPhase==='paused'||missionPhase==='expired'){beginMission();return;}if(missionPhase!=='running'&&missionPhase!=='complete')return;running=true;changed();};$('#pause').onclick=()=>{running=false;changed();};
 document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='Escape'){cancelWireGesture();if(drag){state=JSON.parse(drag.snapshot);drag=null;}placing=armed=null;renderBoard();}if((e.key==='Enter'||e.key===' ')&&e.target.closest('[data-rotate-part]')){e.preventDefault();selected=e.target.closest('[data-rotate-part]').dataset.rotatePart;rotate();}if(e.key.toLowerCase()==='r')rotate();if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();remove();}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();$(e.shiftKey?'#redo':'#undo').click();}});
 // Templates are real editable networks, not illustrative diagrams.
 function makeExample(name){const C=[],W=[];const add=(type,x,y,v)=>{const c=part(type,x,y,v);C.push(c);return c;};const link=(a,t,b,u)=>W.push({id:'w'+(++serial),a:a.id+':'+t,b:b.id+':'+u});
@@ -253,18 +252,26 @@ function guideMission(){
 }
 function solutionCircuit(index){
  const components=[],wires=[];let id=0;
- const add=(type,x,y,value)=>{const c={id:'guide'+(++id),type,x,y,rotation:0,value:value??PARTS[type].value,closed:type==='switch'};components.push(c);return c;};
+ const add=(type,x,y)=>{const c={id:'guide'+(++id),type,x,y,rotation:0,value:PARTS[type].value,closed:type==='switch'};components.push(c);return c;};
  const join=(a,t,b,u,via=[])=>wires.push({id:'guide-wire'+wires.length,a:a.id+':'+t,b:b.id+':'+u,via});
- const source=add(index===12?'cell':'battery',200,380,index===12?3:6);source.rotation=90;
- const kinds=[['lamp'],['switch','lamp'],['ammeter','lamp'],['lamp'],['resistor','resistor'],['resistor'],['variable','lamp'],['resistor','led'],['ldr','lamp'],['switch','ammeter','lamp'],['ammeter','resistor'],['ammeter','resistor'],['lamp'],['lamp','lamp'],['lamp'],['ldr','lamp'],['thermistor','lamp'],['resistor','diode'],['fuse','resistor'],['switch','variable','ammeter','lamp'],['resistor','resistor'],['resistor'],['switch','resistor','led'],['ammeter','resistor']][index];
- const chain=kinds.map((type,i)=>add(type,kinds.length===1?650:350+i*600/(kinds.length-1),180,type==='resistor'?(index===7||index===22?330:index===11||index===20&&i===1?200:index===23?300:100):type==='variable'?200:type==='ldr'&&index===15?180:undefined));
+ const kind=missions[index][3],source=add(kind==='supplylamp'?'supply':['batterylamp','serieslamps','parallellamps','junction','seriesammeter','final'].includes(kind)?'battery':'cell',200,380);source.rotation=90;
+ const layouts={teacher:['lamp'],celllamp:['lamp'],batterylamp:['lamp'],switch:['switch','lamp'],openswitch:['switch','lamp'],resistor:['resistor'],resistorlamp:['resistor','lamp'],variable:['variable','lamp'],ammeter:['ammeter','lamp'],voltmeter:['lamp'],serieslamps:['lamp','lamp'],parallellamps:['lamp'],fuse:['fuse','lamp'],diode:['resistor','diode'],led:['resistor','led'],thermistor:['thermistor','lamp'],ldr:['ldr','lamp'],capacitor:['capacitor','resistor'],junction:['lamp'],wireloop:['lamp'],supplylamp:['lamp'],rotate:['lamp'],switchresistor:['switch','resistor','lamp'],seriesammeter:['ammeter','lamp','lamp'],twometers:['ammeter','lamp'],final:['switch','ammeter','lamp']};
+ const kinds=layouts[kind],chain=kinds.map((type,i)=>add(type,kinds.length===1?650:350+i*600/(kinds.length-1),180));
+ if(kind==='openswitch')chain[0].closed=false;
  join(source,0,chain[0],0,[[200,180]]);
  for(let i=1;i<chain.length;i++)join(chain[i-1],1,chain[i],0);
  join(chain.at(-1),1,source,1,[[1080,180],[1080,620],[200,620]]);
- if(index===5||index===14||index===21){const second=add(index===14?'lamp':'resistor',650,420,index===14?20:index===21?200:100);join(chain[0],0,second,0,[[500,180],[500,420]]);join(chain[0],1,second,1,[[800,180],[800,420]]);}
- if(index===3||index===9||index===19||index===20||index===23){const lamp=chain.at(-1),meter=add('voltmeter',lamp.x,420);join(lamp,0,meter,0);join(lamp,1,meter,1);}
+ if(kind==='parallellamps'||kind==='junction'){
+  const second=add('lamp',650,420);
+  if(kind==='junction'){
+   const node=add('junction',470,180);wires.shift();join(source,0,node,0,[[200,180]]);join(node,1,chain[0],0);join(node,1,second,0,[[550,180],[550,420]]);
+  }else join(chain[0],0,second,0,[[500,180],[500,420]]);
+  join(chain[0],1,second,1,[[800,180],[800,420]]);
+ }
+ if(['voltmeter','twometers','final'].includes(kind)){const lamp=chain.at(-1),meter=add('voltmeter',lamp.x,420);join(lamp,0,meter,0);join(lamp,1,meter,1);}
  return {components,wires};
 }
+function teacherDemo(){const demo=solutionCircuit(0),ids=new Map();demo.wires.pop();for(const c of demo.components){const old=c.id;c.id='p'+(++serial);ids.set(old,c.id);}for(const w of demo.wires){w.id='w'+(++serial);for(const end of ['a','b']){const [id,t]=w[end].split(':');w[end]=ids.get(id)+':'+t;}}return demo;}
 function guideEndpoint(network,key){const [id,t]=key.split(':');return terminal(network.components.find(c=>c.id===id),+t);}
 function guideWirePath(network,wire){const pts=[guideEndpoint(network,wire.a),...(wire.via||[]).map(([x,y])=>({x,y})),guideEndpoint(network,wire.b)];let path='M'+pts[0].x+' '+pts[0].y;for(let i=1;i<pts.length;i++){path+='H'+pts[i].x+'V'+pts[i].y;}return path;}
 function drawGuide(container,network,answer=false){
@@ -272,74 +279,22 @@ function drawGuide(container,network,answer=false){
  network.wires.slice(0,answer?network.wires.length:1).forEach(w=>container.append(svgNode('path',{d:guideWirePath(network,w),class:'guide-wire'})));
  network.components.forEach((c,i)=>{
   const g=svgNode('g',{'data-guide-part':c.type,transform:`translate(${c.x},${c.y})`}),shape=svgNode('g',{transform:`rotate(${c.rotation})`});shape.innerHTML=symbol(c.type,c.closed);g.append(shape);
-  const label=svgNode('text',{x:['cell','battery'].includes(c.type)?-105:0,y:['cell','battery'].includes(c.type)?10:65,'text-anchor':'middle',class:'guide-label'});label.textContent=`${i+1}. ${PARTS[c.type].name}`+(c.value!==undefined?` · ${c.value} ${PARTS[c.type].unit}`:'');g.append(label);
+  const label=svgNode('text',{x:['cell','battery'].includes(c.type)?-105:0,y:['cell','battery'].includes(c.type)?10:65,'text-anchor':'middle',class:'guide-label'});label.textContent=`${i+1}. ${PARTS[c.type].name}`;g.append(label);
   for(let t=0;t<2;t++){const p=terminal(c,t);g.append(svgNode('circle',{cx:p.x-c.x,cy:p.y-c.y,r:7,class:'guide-dot'}));if(answer){const letter=svgNode('text',{x:p.x-c.x,y:p.y-c.y-14,'text-anchor':'middle',class:'guide-terminal-label'});letter.textContent=t===0?'a':'b';g.append(letter);}}
   container.append(g);
  });
 }
 function renderGuide(){
- if(guideKey!==helpKey()){guideKey=helpKey();guideVisible=false;cancelDance();$('#answerDialog').close();$('#answerDrawing').replaceChildren();$('#answerConnections').replaceChildren();}
+ if(guideKey!==helpKey()){guideKey=helpKey();guideVisible=false;$('#completionDialog').close();$('#answerDialog').close();$('#answerDrawing').replaceChildren();$('#answerConnections').replaceChildren();}
  const enabled=mode!=='explorer';$('#boardHelp').hidden=!enabled;
  $('#hint').setAttribute('aria-pressed',guideVisible);$('#hint').textContent=guideVisible?'Hide hint':'Hint';
  $('#hintLayer').replaceChildren();$('#hintLabel').hidden=!guideVisible;$('#empty').hidden=!!state.components.length||guideVisible;
  if(guideVisible&&enabled)drawGuide($('#hintLayer'),solutionCircuit(guideMission()));
 }
-// One licensed full-body 3D clip, with seven saved tempo variants; no PIN or camera.
-const DANCE_MOVES=[
- {name:'Robot boogie',hint:'Copy the robot’s full-body groove.'},
- {name:'Disco bot',hint:'Copy the steps and sway with the robot.'},
- {name:'Slow groove',hint:'Follow the robot’s slow, funny dance.'},
- {name:'Speedy shuffle',hint:'Copy the robot’s quick little steps.'},
- {name:'Side-to-side',hint:'Sway and step with the robot.'},
- {name:'Turnaround groove',hint:'Copy the robot’s turns and steps.'},
- {name:'Bouncy bot',hint:'Follow the robot’s bouncy groove.'}
-];
-let danceRequest=null,danceTicker=null,danceAssignments=[];
-try{const saved=JSON.parse(localStorage.getItem('circuitlab-dance-moves-v1'));if(Array.isArray(saved)&&saved.length===missions.length&&saved.every(i=>Number.isInteger(i)&&i>=0&&i<DANCE_MOVES.length))danceAssignments=saved;}catch{}
-if(!danceAssignments.length){let last=-1;while(danceAssignments.length<missions.length){const bag=DANCE_MOVES.map((_,i)=>i);for(let i=bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bag[i],bag[j]]=[bag[j],bag[i]];}if(bag[0]===last)[bag[0],bag[1]]=[bag[1],bag[0]];danceAssignments.push(...bag);last=bag.at(-1);}danceAssignments.length=missions.length;try{localStorage.setItem('circuitlab-dance-moves-v1',JSON.stringify(danceAssignments));}catch{}}
-function cancelDance(){clearInterval(danceTicker);danceTicker=null;danceRequest=null;if(window.CircuitDance)CircuitDance.stop();$('#danceDialog').close();}
-function danceTick(){
- const request=danceRequest;if(!request)return;
- const seconds=request.started===null?5:Math.max(0,Math.ceil((5000-(performance.now()-request.started))/1000));
- $('#danceCountdown').textContent=request.started===null?'Loading…':seconds?seconds+' s':'Ready';
- $('#danceStatus').textContent=request.started===null?'Preparing your 3D dance.':seconds?'Copy the dance.':request.purpose==='retry'?'Ready for another try.':'Ready to see the circuit.';
- $('#continueDance').disabled=request.started===null||seconds>0;
-}
-function showAnswer(){showDance(missionPhase==='expired'?'retry':'answer');}
-async function showDance(purpose='answer',forceMotion=false){
- if($('#answerDialog').open)$('#answerDialog').close();
- cancelDance();$('#explanation').hidden=true;$('#answerDrawing').replaceChildren();$('#answerConnections').replaceChildren();
- const moveIndex=danceAssignments[mission],move=DANCE_MOVES[moveIndex];
- const request={key:helpKey(),started:null,moveIndex,purpose};danceRequest=request;
- $('#danceTitle').textContent=move.name;$('#danceKicker').textContent=purpose==='retry'?'TIME’S UP · RETRY DANCE':'DANCE TO REVEAL';$('#danceInstruction').textContent=move.hint;
- const stage=$('#danceFigure');stage.className='dance-figure';stage.dataset.move=String(moveIndex);stage.dataset.renderer='loading';
- $('#robotFallback').hidden=true;$('#danceLoading').hidden=false;$('#danceRenderNote').hidden=true;
- const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches&&!forceMotion;
- $('#danceMotionNote').hidden=!reduced;$('#replayDance').textContent=reduced?'Play dance':'Replay';
- $('#adaptedMove').setAttribute('aria-pressed','false');$('#danceAlternative').hidden=true;
- $('#continueDance').textContent=purpose==='retry'?'Try again':'See answer';$('#danceDialog').showModal();danceTick();
- let ready=false;
- try{if(window.CircuitDance)ready=await CircuitDance.play(stage,moveIndex,forceMotion);}catch{/* Provide an animated, locally drawn toy robot on devices without WebGL. */}
- if(danceRequest!==request)return;
- $('#danceLoading').hidden=true;
- if(!ready){stage.dataset.renderer='css';stage.dataset.motion=reduced?'still':'playing';stage.classList.toggle('dance-play',forceMotion);$('#robotFallback').hidden=false;$('#danceRenderNote').hidden=false;}
- request.started=performance.now();danceTick();danceTicker=setInterval(danceTick,100);
-}
-$('#cancelDance').onclick=cancelDance;$('#danceDialog').addEventListener('cancel',cancelDance);
-$('#replayDance').onclick=()=>{if(danceRequest)showDance(danceRequest.purpose,true);};
-$('#adaptedMove').onclick=()=>{const active=$('#adaptedMove').getAttribute('aria-pressed')!=='true';$('#adaptedMove').setAttribute('aria-pressed',active);$('#danceAlternative').hidden=!active;};
-$('#continueDance').onclick=()=>{
- const request=danceRequest;
- if(!request||request.key!==helpKey()||request.started===null||performance.now()-request.started<5000)return;
- const purpose=request.purpose;cancelDance();
- if(purpose==='retry'){retryMission();return;}
- if(missionPhase==='expired')return;
- $('#explanation').hidden=false;$('#explanation').textContent=missions[mission][2];revealAnswer();
-};
-
+function showAnswer(){revealAnswer();}
 function revealAnswer(){
  const index=guideMission(),network=solutionCircuit(index),calculated=CircuitSolver.solve(network);
- if(!calculated.ok||!calculated.active){notify('This guide is unavailable.');return;}
+ if(!calculated.ok){notify('This guide is unavailable.');return;}
  $('#answerTitle').textContent='Answer · '+missions[index][0];
  $('#answerNote').textContent=mode==='detective'?detectives[detective][2]:missions[index][2];
  drawGuide($('#answerDrawing'),network,true);
@@ -355,7 +310,7 @@ $('#closeAnswer').onclick=()=>$('#answerDialog').close();
 function activity(){const a=$('#activity');a.replaceChildren();const h=document.createElement('h2'),p=document.createElement('p');a.append(h,p);$('#explorerPanel').hidden=mode!=='explorer';
  if(mode==='build'){h.textContent='Free build';p.textContent='Add parts → join the dots → press Run.';}
  if(mode==='explorer'){h.textContent='Symbols';p.textContent='Tap a part to learn it. Then try the quiz.';quiz();}
- if(mode==='missions'||mode==='challenge'){const m=missions[mission];h.textContent=`Mission ${mission+1}/${missions.length} · ${m[0]}`;p.textContent=m[1];const progress=document.createElement('div');progress.className='progress';progress.innerHTML='<div style="width:'+classroom.completed.length/missions.length*100+'%"></div>';a.append(progress);const status=document.createElement('span');status.id='missionStatus';a.append(status);const back=document.createElement('button');back.id='missionBack';back.textContent='← Back';back.onclick=backMission;a.append(back);const next=document.createElement('button');next.id='missionNext';next.textContent='Next →';next.disabled=!mayAdvanceMission();next.onclick=nextMission;a.append(next);if(mode==='challenge')scoreboard(a);}
+ if(mode==='missions'||mode==='challenge'){const m=missions[mission];h.textContent=`Question ${mission+1}/${missions.length} · ${m[0]}`;p.textContent=m[1];const progress=document.createElement('div');progress.className='progress';progress.innerHTML='<div style="width:'+classroom.completed.length/missions.length*100+'%"></div>';a.append(progress);const status=document.createElement('span');status.id='missionStatus';a.append(status);const back=document.createElement('button');back.id='missionBack';back.textContent='← Back';back.onclick=backMission;a.append(back);const next=document.createElement('button');next.id='missionNext';next.textContent='Next →';next.disabled=!mayAdvanceMission();next.onclick=nextMission;a.append(next);if(mode==='challenge')scoreboard(a);}
  if(mode==='detective'){const d=detectives[detective];h.textContent=`Case ${detective+1}/3 · ${d[0]}`;p.textContent=d[1];const status=document.createElement('span');status.id='missionStatus';a.append(status);const b=document.createElement('button');b.textContent='Restart';b.onclick=()=>load(d[3]);const next=document.createElement('button');next.textContent='Next case →';next.className='primary';next.onclick=()=>{detective=(detective+1)%detectives.length;load(detectives[detective][3]);activity();};a.append(b,next);}
  document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));validate();renderGuide();
 }
@@ -363,48 +318,102 @@ function nextMission(){if(!mayAdvanceMission()){notify('Finish this mission firs
 function backMission(){if(mission===0){notify('This is the first mission');return;}startMission(mission-1);}
 function startMission(index){
  cancelWireGesture();drag=null;missionPassSignature='';mission=index;
- state={components:[],wires:[]};history=[];future=[];selected=armed=placing=null;example='';$('#examples').value='';resetAttempt();
+ state={components:[],wires:[]};history=[];future=[];selected=armed=placing=null;example='';$('#examples').value='';if(mission===0)state=teacherDemo();resetAttempt();
  $('#explanation').hidden=true;renderTimer();activity();changed();
 }
 $('#modes').onclick=e=>{const b=e.target.closest('[data-mode]');if(!b)return;mode=b.dataset.mode;placing=armed=null;if(mode==='detective')load(detectives[detective][3]);activity();renderBoard();persist();};
 function scoreboard(a){const controls=document.createElement('label');controls.textContent='Participants ';const count=document.createElement('input');count.type='number';count.min=1;count.max=20;count.value=classroom.names.length;count.style.width='70px';count.onchange=()=>{const n=Math.min(20,Math.max(1,+count.value||1));while(classroom.names.length<n){classroom.names.push('Pair '+(classroom.names.length+1));classroom.scores.push(0);}classroom.names.length=n;classroom.scores.length=n;activity();persist();};controls.append(count);a.append(controls);const table=document.createElement('table');table.className='scoreboard';table.innerHTML='<thead><tr><th>Student / pair</th><th>Points</th><th>Teacher awards</th></tr></thead>';const tbody=document.createElement('tbody');classroom.names.forEach((name,i)=>{const tr=document.createElement('tr'),td=document.createElement('td'),inp=document.createElement('input');inp.type='text';inp.maxLength=40;inp.value=name;inp.setAttribute('aria-label','Participant '+(i+1));inp.onchange=()=>{classroom.names[i]=inp.value;persist();};td.append(inp);const score=document.createElement('td');score.textContent=classroom.scores[i];const actions=document.createElement('td');for(const delta of [10,-10]){const b=document.createElement('button');b.textContent=delta>0?'+10':'−10';b.setAttribute('aria-label',(delta>0?'Award':'Remove')+' 10 points for participant '+(i+1));b.onclick=()=>{classroom.scores[i]=Math.max(0,classroom.scores[i]+delta);activity();persist();};actions.append(b);}tr.append(td,score,actions);tbody.append(tr);});table.append(tbody);a.append(table);const p=document.createElement('p');p.className='micro';p.textContent='Give each pair the mission. Check it, then award points.';a.append(p);const reset=document.createElement('button');reset.textContent='Reset scores';reset.onclick=()=>{classroom.scores.fill(0);activity();persist();};a.append(reset);}
-function checkMission(index){if(!result?.ok||!result.active)return false;const r=result.readings,cs=state.components,n=result.nodes;const types=t=>cs.filter(c=>c.type===t),live=c=>Math.abs(r[c.id].current)>1e-7,lamps=types('lamp').filter(live),switches=types('switch').filter(c=>c.closed),res=types('resistor');
+function checkMission(index){
+ if(!result?.ok)return false;
+ const cs=state.components,r=result.readings,n=result.nodes,kind=missions[index][3];
+ const types=t=>cs.filter(c=>c.type===t),live=c=>Math.abs(r[c.id]?.current||0)>1e-7;
+ if(kind==='openswitch'||kind==='capacitor'){
+  const candidates=kind==='openswitch'?types('switch').filter(c=>!c.closed):types('capacitor');
+  return !result.active&&candidates.some(c=>{
+   const copy=JSON.parse(JSON.stringify(state)),part=copy.components.find(p=>p.id===c.id);
+   if(kind==='openswitch')part.closed=true;else{part.type='resistor';part.value=20;}
+   const test=CircuitSolver.solve(copy);
+   return test.ok&&Math.abs(test.readings[c.id]?.current||0)>1e-7&&copy.components.some(p=>p.type===(kind==='openswitch'?'lamp':'resistor')&&p.id!==c.id&&Math.abs(test.readings[p.id]?.current||0)>1e-7);
+  });
+ }
+ if(!result.active)return false;
+ const lamps=types('lamp').filter(live),switches=types('switch').filter(c=>c.closed);
  const pair=c=>[n[c.id+':0'],n[c.id+':1']],parallel=(a,b)=>{const x=pair(a),y=pair(b);return x[0]===y[0]&&x[1]===y[1]||x[0]===y[1]&&x[1]===y[0];};
- // Remove the selected branch to prove it lies in a necessary series path.
- const seriesWith=(a,b)=>{if(!live(a)||!live(b)||Math.abs(Math.abs(r[a.id].current)-Math.abs(r[b.id].current))>1e-6)return false;const copy=JSON.parse(JSON.stringify(state));copy.components=copy.components.filter(c=>c.id!==a.id);copy.wires=copy.wires.filter(w=>!w.a.startsWith(a.id+':')&&!w.b.startsWith(a.id+':'));const s=CircuitSolver.solve(copy);return s.ok&&Math.abs(s.readings[b.id]?.current||0)<1e-8;};
- const controlled=lamps.some(l=>switches.some(s=>{const copy=JSON.parse(JSON.stringify(state));copy.components.find(c=>c.id===s.id).closed=false;const out=CircuitSolver.solve(copy);return out.ok&&Math.abs(out.readings[l.id].current)<1e-8;}));
- const amp=lamps.some(l=>types('ammeter').some(a=>seriesWith(a,l))),volt=lamps.some(l=>types('voltmeter').some(v=>parallel(v,l)&&Math.abs(r[v.id].voltage)>1e-7));
- const six=cs.some(c=>['battery','cell','supply'].includes(c.type)&&Math.abs(c.value-6)<1e-7&&live(c));
- const close=(a,b)=>Math.abs(a-b)<1e-6,mag=c=>Math.abs(r[c.id].current);
- const measured=(ohms,current)=>six&&res.some(l=>close(l.value,ohms)&&close(mag(l),current)&&types('ammeter').some(a=>seriesWith(a,l)));
- switch(missions[index][3]){case'lamp':return !!lamps.length;case'switch':return controlled;case'ammeter':return amp;case'voltmeter':return volt;case'series':return six&&res.some(a=>a.value===100&&res.some(b=>a!==b&&b.value===100&&seriesWith(a,b)&&Math.abs(Math.abs(r[a.id].current)-.03)<1e-6));case'parallel':return six&&res.some(a=>a.value===100&&res.some(b=>a!==b&&b.value===100&&parallel(a,b)&&Math.abs(Math.abs(r[a.id].current)-.06)<1e-6));case'variable':return lamps.some(l=>Math.abs(r[l.id].current)>=.02&&Math.abs(r[l.id].current)<=.04&&types('variable').some(v=>seriesWith(v,l)));case'led':return types('led').some(l=>r[l.id].current>=.005&&r[l.id].current<=.02&&res.some(v=>seriesWith(v,l)));case'sensor':return lamps.some(l=>[...types('ldr'),...types('thermistor')].some(s=>seriesWith(s,l)));case'all':return controlled&&amp&&volt;
- case'ohm':return measured(100,.06);
- case'lowcurrent':return measured(200,.03);
- case'celllamp':return types('cell').some(c=>close(c.value,3)&&live(c))&&lamps.some(l=>close(l.value,20)&&close(mag(l),.15));
- case'serieslamps':return six&&lamps.some(a=>close(a.value,20)&&close(mag(a),.15)&&lamps.some(b=>a!==b&&close(b.value,20)&&seriesWith(a,b)));
- case'parallellamps':return six&&lamps.some(a=>close(a.value,20)&&close(mag(a),.3)&&lamps.some(b=>a!==b&&close(b.value,20)&&parallel(a,b)));
- case'ldrtarget':return six&&lamps.some(l=>close(l.value,20)&&close(mag(l),.03)&&types('ldr').some(c=>seriesWith(c,l)));
- case'thermistortarget':return six&&lamps.some(l=>close(l.value,20)&&close(mag(l),.05)&&types('thermistor').some(c=>close(c.value,100)&&seriesWith(c,l)));
- case'forwarddiode':return six&&types('diode').some(d=>r[d.id].current>0&&close(r[d.id].current,5.3/101)&&res.some(c=>close(c.value,100)&&seriesWith(c,d)));
- case'fusepath':return six&&types('fuse').some(f=>close(f.value,1)&&close(mag(f),6/101)&&res.some(c=>close(c.value,100)&&seriesWith(c,f)));
- case'unequalseries':return six&&res.some(b=>close(b.value,200)&&close(mag(b),.02)&&res.some(a=>close(a.value,100)&&seriesWith(a,b))&&types('voltmeter').some(v=>parallel(v,b)&&close(Math.abs(r[v.id].voltage),4)));
- case'unequalparallel':return six&&res.some(a=>close(a.value,100)&&close(mag(a),.06)&&res.some(b=>close(b.value,200)&&close(mag(b),.03)&&parallel(a,b)));
- case'ledswitch':return six&&types('led').some(l=>r[l.id].current>=.005&&r[l.id].current<=.02&&res.some(c=>close(c.value,330)&&seriesWith(c,l))&&switches.some(c=>seriesWith(c,l)));
- case'finalcheck':return measured(300,.02)&&res.some(c=>close(c.value,300)&&types('voltmeter').some(v=>parallel(v,c)&&close(Math.abs(r[v.id].voltage),6)));
- case'master':return controlled&&amp&&volt&&lamps.some(l=>mag(l)>=.02&&mag(l)<=.04&&types('variable').some(v=>seriesWith(v,l)));
- default:return false;}
+ const seriesWith=(a,b)=>{
+  if(!live(a)||!live(b)||Math.abs(Math.abs(r[a.id].current)-Math.abs(r[b.id].current))>1e-6)return false;
+  const copy=JSON.parse(JSON.stringify(state));copy.components=copy.components.filter(c=>c.id!==a.id);copy.wires=copy.wires.filter(w=>!w.a.startsWith(a.id+':')&&!w.b.startsWith(a.id+':'));
+  const test=CircuitSolver.solve(copy);return test.ok&&Math.abs(test.readings[b.id]?.current||0)<1e-8;
+ };
+ const withLamp=type=>lamps.some(l=>types(type).some(c=>seriesWith(c,l)));
+ const seriesLamps=lamps.some(a=>lamps.some(b=>a!==b&&seriesWith(a,b)));
+ const parallelLamps=lamps.some(a=>lamps.some(b=>a!==b&&parallel(a,b)));
+ const amp=withLamp('ammeter'),volt=lamps.some(l=>types('voltmeter').some(v=>parallel(v,l)&&r[v.id].voltage!==null));
+ switch(kind){
+  case'teacher':case'celllamp':case'wireloop':return withLamp('cell');
+  case'batterylamp':return withLamp('battery');
+  case'supplylamp':return withLamp('supply');
+  case'switch':return withLamp('switch');
+  case'resistor':return types('resistor').some(l=>live(l)&&cs.some(c=>['cell','battery','supply'].includes(c.type)&&seriesWith(c,l)));
+  case'resistorlamp':return withLamp('resistor');
+  case'variable':return withLamp('variable');
+  case'ammeter':return amp;
+  case'voltmeter':return volt;
+  case'serieslamps':return seriesLamps;
+  case'parallellamps':return parallelLamps;
+  case'fuse':return withLamp('fuse');
+  case'diode':return types('diode').some(d=>r[d.id].current>0&&types('resistor').some(c=>seriesWith(c,d)));
+  case'led':return types('led').some(d=>r[d.id].current>0&&r[d.id].current<=.03&&types('resistor').some(c=>seriesWith(c,d)));
+  case'thermistor':return withLamp('thermistor');
+  case'ldr':return withLamp('ldr');
+  case'junction':return parallelLamps&&types('junction').some(j=>state.wires.filter(w=>w.a.startsWith(j.id+':')||w.b.startsWith(j.id+':')).length>=3);
+  case'rotate':return withLamp('cell')&&cs.some(c=>(c.rotation||0)%360!==0&&live(c));
+  case'switchresistor':return withLamp('switch')&&withLamp('resistor');
+  case'seriesammeter':return seriesLamps&&amp;
+  case'twometers':return amp&&volt;
+  case'final':return switches.length>0&&withLamp('switch')&&amp&&volt;
+  default:return false;
+ }
 }
-function validate(){const status=$('#missionStatus');if(!status){$('#nextMission').disabled=true;return;}let passed=false;if(mode==='missions'||mode==='challenge'){if(missionPhase==='complete'&&missionPassSignature!==missionSignature()){missionPhase='running';timerOn=true;missionDeadline=Date.now()+remaining*1000;}passed=(missionPhase==='running'||missionPhase==='complete')&&checkMission(mission);if(passed){missionPassSignature=missionSignature();missionPhase='complete';timerOn=false;missionDeadline=null;}passed=passed||mayAdvanceMission();if(passed&&!classroom.completed.includes(mission)){classroom.completed.push(mission);beep();const bar=$('.progress div');if(bar)bar.style.width=classroom.completed.length/missions.length*100+'%';}}
+
+let completionAnnounced=false;
+function showMissionComplete(firstTime){
+ if($('#answerDialog').open)$('#answerDialog').close();
+ $('#completionTitle').textContent=mission===0?'Demo complete!':'Mission complete!';
+ $('#completionBadgeName').textContent=missions[mission][0];
+ $('#completionBadgeStatus').textContent=firstTime?'New badge earned':'Badge already collected';
+ $('#completionProgress').textContent=`${classroom.completed.length} / ${missions.length} complete`;
+ $('#completionDialog').showModal();
+}
+$('#closeCompletion').onclick=()=>$('#completionDialog').close();
+$('#completionNext').onclick=()=>{$('#completionDialog').close();nextMission();};
+
+function validate(){const status=$('#missionStatus');if(!status){$('#nextMission').disabled=true;return;}let passed=false;if(mode==='missions'||mode==='challenge'){if(missionPhase==='complete'&&missionPassSignature!==missionSignature()){missionPhase='running';timerOn=true;missionDeadline=Date.now()+remaining*1000;}passed=(missionPhase==='running'||missionPhase==='complete')&&checkMission(mission);if(passed){missionPassSignature=missionSignature();missionPhase='complete';timerOn=false;missionDeadline=null;}passed=passed||mayAdvanceMission();const firstTime=!classroom.completed.includes(mission);if(passed&&firstTime){classroom.completed.push(mission);beep();const bar=$('.progress div');if(bar)bar.style.width=classroom.completed.length/missions.length*100+'%';}if(passed&&!completionAnnounced){completionAnnounced=true;showMissionComplete(firstTime);}}
  if(mode==='detective'&&result?.ok&&result.active){const type=detectives[detective][3];passed=type==='reverse-led'?state.components.some(c=>c.type==='led'&&result.readings[c.id].current>=.005&&result.readings[c.id].current<=.02):state.components.some(c=>c.type==='lamp'&&Math.abs(result.readings[c.id].current)>1e-5)&&state.components.some(c=>c.type==='ammeter'&&Math.abs(result.readings[c.id].current)>1e-5);}
  const next=$('#missionNext');if(next)next.disabled=!mayAdvanceMission();$('#nextMission').disabled=!mayAdvanceMission();
  status.textContent=passed?'✓ Circuit verified!':'Build it, then press Run.';status.className=passed?'success':'pending';}
 $('#teacher').onclick=()=>{const panel=$('#teacherPanel');panel.hidden=!panel.hidden;$('#teacher').setAttribute('aria-pressed',!panel.hidden);};
 function renderTimer(){$('#timer').textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');refreshMissionClock();}
-$('#timerPause').onclick=pauseMission;$('#timerReset').onclick=()=>{if(missionPhase==='expired'){showDance('retry');return;}resetAttempt();changed();renderTimer();};$('#nextMission').onclick=nextMission;$('#previousMission').onclick=backMission;$('#reveal').onclick=showAnswer;
+$('#timerPause').onclick=pauseMission;$('#timerReset').onclick=()=>{resetAttempt();changed();renderTimer();};$('#nextMission').onclick=nextMission;$('#previousMission').onclick=backMission;$('#reveal').onclick=showAnswer;
 
 $('#sound').onclick=()=>{sound=!sound;$('#sound').textContent=sound?'🔊':'🔇';$('#sound').setAttribute('aria-label',sound?'Sound on':'Sound off');$('#sound').setAttribute('aria-pressed',sound);beep();};$('#fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{notify('Fullscreen is unavailable in this browser.');}};
 // Wire flow uses KCL at each terminal, distributing cycles without inventing meter readings.
 function wireCurrents(){if(!result?.ok)return new Map();const keys=state.components.flatMap(c=>[c.id+':0',c.id+':1']),adj=new Map(keys.map(k=>[k,[]])),edges=[...state.wires];for(const c of state.components)if(c.type==='wire'||c.type==='junction')edges.push({id:'internal-'+c.id,a:c.id+':0',b:c.id+':1'});for(const e of edges){adj.get(e.a)?.push(e);adj.get(e.b)?.push(e);}const demand=new Map(keys.map(k=>[k,0]));for(const c of state.components){const i=result.readings[c.id].current||0;demand.set(c.id+':0',-i);demand.set(c.id+':1',i);}const seen=new Set(),flows=new Map();function visit(k){seen.add(k);let total=demand.get(k)||0;for(const e of adj.get(k)){const other=e.a===k?e.b:e.a;if(seen.has(other))continue;const q=visit(other);flows.set(e.id,e.a===k?-q:q);total+=q;}return total;}for(const k of keys)if(!seen.has(k))visit(k);return flows;}
 let lastFlow=0;function animate(time){requestAnimationFrame(animate);if(time-lastFlow<70)return;lastFlow=time;const g=$('#flows');g.replaceChildren();if(!running||!result?.ok||$('#flow').value==='none')return;const currents=wireCurrents(),electron=$('#flow').value==='electron';for(const w of state.wires){const i=(currents.get(w.id)||0)*(electron?-1:1);if(Math.abs(i)<1e-8)continue;const pts=wirePoints(w),lens=pts.slice(1).map((p,j)=>Math.hypot(p.x-pts[j].x,p.y-pts[j].y)),total=lens.reduce((a,b)=>a+b,0);if(total<2)continue;for(let offset=0;offset<total;offset+=85){let d=(offset+(time*.035*Math.sign(i))%total+total)%total,j=0;while(j<lens.length-1&&d>lens[j])d-=lens[j++];if(!lens[j])continue;const a=pts[j],b=pts[j+1],f=d/lens[j],x=a.x+(b.x-a.x)*f,y=a.y+(b.y-a.y)*f,angle=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI+(i<0?180:0);g.append(svgNode('path',{d:'M-7 -4L2 0L-7 4Z',transform:`translate(${x},${y}) rotate(${angle})`,class:'flow-arrow'+(electron?' electron':'')}));}}}
-try{const saved=JSON.parse(localStorage.getItem('circuitlab-v1'));if(saved&&Array.isArray(saved.state?.components)&&Array.isArray(saved.state?.wires)&&saved.state.components.every(c=>PARTS[c.type]&&typeof c.id==='string'&&Number.isFinite(c.x)&&Number.isFinite(c.y))){state=saved.state;serial=+saved.serial||1000;example=saved.example||'';if(saved.classroom&&Array.isArray(saved.classroom.names)&&Array.isArray(saved.classroom.scores)&&Array.isArray(saved.classroom.completed))classroom=saved.classroom;mission=Math.max(0,Math.min(missions.length-1,+saved.mission||0));detective=Math.max(0,Math.min(2,+saved.detective||0));mode='missions';if(saved.retryLocks&&typeof saved.retryLocks==='object')retryLocks=Object.fromEntries(Object.entries(saved.retryLocks).filter(([k,v])=>Number.isInteger(+k)&&+k>=0&&+k<missions.length&&v===true));classroom.completed=[...new Set(classroom.completed.filter(i=>Number.isInteger(i)&&i>=0&&i<missions.length))];if(saved.attempt&&['ready','running','paused','complete','expired'].includes(saved.attempt.phase)){missionPhase=saved.attempt.phase;remaining=Math.max(0,Math.min(90,+saved.attempt.remaining||0));missionDeadline=Number.isFinite(saved.attempt.deadline)?saved.attempt.deadline:null;if(missionPhase==='running'&&missionDeadline!==null){remaining=Math.max(0,Math.ceil((missionDeadline-Date.now())/1000));timerOn=remaining>0;running=remaining>0;if(!remaining)missionPhase='expired';}else if(missionPhase==='running'){missionPhase='ready';remaining=90;}if(missionPhase==='complete')missionPassSignature=missionSignature();}}}catch{notify('Saved progress could not be loaded. Starting a new board.');}
-if(retryLocks[mission]){missionPhase='expired';remaining=0;timerOn=false;running=false;missionDeadline=null;}activity();changed();renderTimer();if(missionPhase==='expired')showDance('retry');requestAnimationFrame(animate);
+let restored=false;
+try{
+ const saved=JSON.parse(localStorage.getItem('circuitlab-v1'));
+ if(saved&&saved.courseVersion===COURSE_VERSION&&Array.isArray(saved.state?.components)&&Array.isArray(saved.state?.wires)&&saved.state.components.every(c=>PARTS[c.type]&&typeof c.id==='string'&&Number.isFinite(c.x)&&Number.isFinite(c.y))){
+  state=saved.state;serial=+saved.serial||1000;example=saved.example||'';mission=Math.max(0,Math.min(missions.length-1,Math.floor(+saved.mission||0)));
+  if(saved.classroom&&Array.isArray(saved.classroom.completed))classroom=saved.classroom;
+  classroom.completed=[...new Set(classroom.completed.filter(i=>Number.isInteger(i)&&i>=0&&i<missions.length))];
+  if(saved.attempt&&saved.attempt.limit===MISSION_SECONDS&&['ready','running','paused','complete','expired'].includes(saved.attempt.phase)){
+   missionPhase=saved.attempt.phase;remaining=Math.max(0,Math.min(MISSION_SECONDS,+saved.attempt.remaining||0));missionDeadline=Number.isFinite(saved.attempt.deadline)?saved.attempt.deadline:null;
+   if(missionPhase==='running'&&missionDeadline!==null){remaining=Math.max(0,Math.min(MISSION_SECONDS,Math.ceil((missionDeadline-Date.now())/1000)));timerOn=remaining>0;running=remaining>0;if(!remaining)missionPhase='expired';}
+   else if(missionPhase==='running'){missionPhase='ready';remaining=MISSION_SECONDS;}
+   if(missionPhase==='complete'){missionPassSignature=missionSignature();completionAnnounced=true;}
+  }
+  restored=true;
+ }else if(saved&&!localStorage.getItem('circuitlab-previous-course-v1'))localStorage.setItem('circuitlab-previous-course-v1',JSON.stringify(saved));
+}catch{notify('Starting a new symbol lesson.');}
+if(!restored){state=teacherDemo();mission=0;classroom.completed=[];}
+mode='missions';activity();changed();renderTimer();requestAnimationFrame(animate);

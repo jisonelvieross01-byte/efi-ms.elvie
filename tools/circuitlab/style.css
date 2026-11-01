@@ -188,41 +188,6 @@ dialog::backdrop{background:#0f2a3a88;backdrop-filter:blur(3px)}
 #missionBack,#missionNext{min-height:40px}
 @media(max-width:1100px){#modes{order:initial;flex-basis:auto;margin-left:auto;margin-right:0}}
 
-/* Full-body 3D dance, locally bundled; no PIN controls. */
-#danceDialog{width:min(94vw,620px);max-width:620px;max-height:94dvh;overflow:auto;padding:20px}
-.dance-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.dance-kicker{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--teal)}
-#danceTitle{font-size:26px;margin-top:10px}
-#danceInstruction,#danceAlternative,#danceMotionNote,#danceRenderNote{font-size:14px;color:var(--muted);margin:8px 0}
-.dance-figure{position:relative;display:block;width:100%;height:340px;margin:12px auto;background:var(--teal-soft,#e6f6f4);border-radius:18px;overflow:hidden}
-.dance-figure canvas{display:block;width:100%;height:100%}
-#danceLoading{position:absolute;inset:0;display:grid;place-items:center;color:var(--teal);font-weight:650;background:var(--teal-soft,#e6f6f4)}
-#danceLoading[hidden],#robotFallback[hidden],#danceAlternative[hidden],#danceRenderNote[hidden],#danceMotionNote[hidden]{display:none}
-.dance-timing{display:flex;align-items:center;gap:14px;margin:10px 0;text-align:left}
-#danceCountdown{font-size:29px;white-space:nowrap;color:var(--teal);min-width:65px}
-#danceStatus{font-size:15px;color:var(--muted);margin:0}
-.dance-options{display:flex;justify-content:center;gap:8px;margin:10px 0}
-#adaptedMove,#replayDance{min-height:42px}
-#continueDance{width:100%;min-height:52px;font-weight:700;font-size:17px;margin-top:10px}
-#adaptedMove[aria-pressed=true]{border-color:var(--teal);background:var(--teal-soft,#e6f6f4)}
-#robotFallback{position:absolute;inset:0;display:grid;place-items:center;perspective:600px}
-.toy-robot{position:relative;width:150px;height:260px;transform-style:preserve-3d;animation:toy-boogie 1.25s ease-in-out infinite alternate}
-.toy-head{position:absolute;left:40px;top:15px;width:70px;height:65px;border-radius:18px;background:linear-gradient(135deg,#fff,var(--teal));box-shadow:8px 6px 0 var(--navy);transform:translateZ(18px)}
-.toy-head:before{content:"";position:absolute;inset:17px 9px 19px;background:var(--navy);border-radius:10px}
-.toy-head:after{content:"• •";position:absolute;inset:15px 0;color:white;font-size:22px;letter-spacing:6px;text-align:center}
-.toy-torso{position:absolute;left:37px;top:87px;width:76px;height:78px;border-radius:18px;background:linear-gradient(135deg,var(--teal),var(--navy));box-shadow:7px 5px 0 var(--muted)}
-.toy-arm{position:absolute;top:90px;width:25px;height:85px;border-radius:12px;background:linear-gradient(90deg,#fff,var(--orange));transform-origin:50% 10px;box-shadow:4px 3px 0 var(--navy)}
-.toy-arm.toy-left{left:3px;animation:toy-arm 650ms ease-in-out infinite alternate}
-.toy-arm.toy-right{right:3px;animation:toy-arm 650ms ease-in-out infinite alternate-reverse}
-.toy-leg{position:absolute;top:168px;width:30px;height:78px;border-radius:12px;background:linear-gradient(90deg,var(--line),var(--teal));transform-origin:50% 0;box-shadow:6px 5px 0 var(--navy)}
-.toy-leg.toy-left{left:38px;animation:toy-step 650ms ease-in-out infinite alternate}
-.toy-leg.toy-right{right:38px;animation:toy-step 650ms ease-in-out infinite alternate-reverse}
-@keyframes toy-boogie{from{transform:translateX(-18px) rotateY(-22deg) rotateZ(-7deg) translateY(0)}to{transform:translateX(18px) rotateY(22deg) rotateZ(7deg) translateY(10px)}}
-@keyframes toy-arm{from{transform:rotateZ(-35deg)}to{transform:rotateZ(35deg)}}
-@keyframes toy-step{from{transform:rotateX(-25deg) rotateZ(-12deg)}to{transform:rotateX(25deg) rotateZ(12deg)}}
-@media(prefers-reduced-motion:reduce){.dance-figure:not(.dance-play) *{animation:none!important}}
-@media(max-height:760px){.dance-figure{height:230px}#danceDialog{padding:14px}#danceTitle{font-size:22px}}
-
 /* Every mission begins deliberately with its own 90-second clock. */
 .mission-start{position:absolute;inset:0;z-index:2;background:#ffffffeb;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
 .mission-start[hidden]{display:none}
@@ -247,3 +212,23 @@ dialog::backdrop{background:#0f2a3a88;backdrop-filter:blur(3px)}
 @media(max-width:600px){.mission-clock-card{flex:1 0 100%;min-width:0}.board-help{justify-content:flex-end}#missionClock{font-size:34px}}
 
 @media(min-width:1101px){#board{max-height:calc(100dvh - 400px)}}
+
+/* A one-time, original achievement-card reveal for a verified circuit. */
+#completionDialog{width:min(94vw,500px);max-width:500px;text-align:center;max-height:94dvh;overflow:auto;border:2px solid var(--teal);padding:25px}
+.completion-kicker{font-size:10px;letter-spacing:1.8px;color:var(--teal);font-weight:800}
+.completion-art{position:relative;width:240px;height:210px;margin:4px auto}
+.completion-art svg{position:relative;width:100%;height:100%;filter:drop-shadow(0 8px 8px #0f2a3a18)}
+.reward-rays{position:absolute;inset:15px 10px;border-radius:50%;background:radial-gradient(circle,#bfe8e2 0,white 70%);animation:reward-glow 1.4s ease-out both}
+.reward-capsule{transform-origin:120px 115px;animation:reward-reveal .65s cubic-bezier(.2,.9,.3,1.2) both}
+.reward-stars{animation:reward-spark .9s ease-out both}
+#completionTitle{font-size:28px;color:var(--navy);margin:8px 0}
+#completionMessage{font-size:17px;margin:6px 0 18px;color:var(--muted)}
+#completionBadgeStatus{display:block;font-size:12px;color:var(--teal);font-weight:700}
+#completionBadgeName{display:block;font-size:19px;margin:5px 0;color:var(--navy)}
+#completionProgress{font-size:13px;color:var(--muted)}
+.completion-actions{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+.completion-actions button{min-height:46px}
+@keyframes reward-glow{from{opacity:0;transform:scale(.65)}to{opacity:1;transform:scale(1)}}
+@keyframes reward-reveal{from{opacity:0;transform:scale(.45) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes reward-spark{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.completion-art *{animation:none!important}}

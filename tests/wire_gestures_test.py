@@ -1,5 +1,6 @@
 """Direct wiring, stretch/reconnect and visible rotation must preserve accurate circuits."""
 from pathlib import Path
+from completion_helpers import auto_dismiss_completion
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
 from functools import partial
 from threading import Thread
@@ -12,6 +13,7 @@ with sync_playwright() as p:
  context=browser.new_context(viewport={'width':1920,'height':1080},has_touch=True)
  context.route('**/*',lambda r:r.continue_() if r.request.url.startswith('http://127.0.0.1:') else r.abort())
  page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+ auto_dismiss_completion(page)
  page.goto(f'http://127.0.0.1:{server.server_port}/tools/circuitlab/index.html')
  page.locator('#missionStart').click()
  def xy(x,y):return page.evaluate('([x,y])=>{const b=document.querySelector("#board"),p=b.createSVGPoint();p.x=x;p.y=y;const r=p.matrixTransform(b.getScreenCTM());return [r.x,r.y]}',[x,y])

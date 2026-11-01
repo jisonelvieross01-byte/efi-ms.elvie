@@ -26,11 +26,10 @@ with sync_playwright() as p:
  assert page.locator('#timerStart').count()==0
  assert page.locator('#missionClockCard').evaluate('e=>getComputedStyle(e).backgroundColor')!='rgba(0, 0, 0, 0)'
  page.locator('#missionStart').click();assert page.evaluate('timerOn')
- # A plain-file bundle still contains its 3D renderer and needs no sidecar assets.
+ # The standalone app has immediate answers and no obsolete renderer assets.
  page.goto(f'http://127.0.0.1:{server.server_port}/downloads/circuitlab.html')
- assert page.evaluate('typeof CircuitDance.play')=='function'
- page.locator('#showAnswer').click();page.wait_for_function('danceRequest && danceRequest.started!==null')
- assert page.locator('#danceFigure').get_attribute('data-renderer')=='webgl'
+ assert page.evaluate('typeof CircuitDance')=='undefined'
+ page.locator('#showAnswer').click();assert page.locator('#answerDialog').is_visible()
  browser.close()
 server.shutdown()
-print('PASS: stale unversioned CSS/JS cannot affect the release; centered Start, highlighted clock and offline standalone 3D dance load correctly.')
+print('PASS: stale unversioned CSS/JS cannot affect the release; centered Start, highlighted clock and offline standalone direct answers load correctly.')

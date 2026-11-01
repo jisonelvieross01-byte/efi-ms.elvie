@@ -1,215 +1,125 @@
 # CircuitLab: Build, Connect & Discover
 
-Offline, touch-friendly circuit laboratory for Cambridge AS & A Level Physics,
-Chapter 8.1. Plain HTML, CSS, JavaScript and SVG; no runtime packages, fonts,
-analytics, external services or API keys.
+An offline, touch-friendly introduction to Cambridge Physics circuit symbols and
+diagrams. Plain HTML, CSS, JavaScript and SVG; no framework or external assets.
 
-## Run
+## Start
 
-Open `index.html` in a current Chrome, Edge, Firefox or Safari browser. Keep
-`style.css`, `solver.js`, `symbols.js`, and `app.js` alongside it. No build or
-installation is needed. If a managed browser blocks local files, use Python 3:
+Open `index.html` in this folder, or use the repository website. For a local server:
 
 ```sh
-cd /path/to/efi-ms.elvie/tools/circuitlab
-python3 -m http.server 8000
+cd /path/to/efi-ms.elvie
+python scripts/build_site.py
+python3 -m http.server 8000 --directory dist
 ```
 
-Open the local server on the same machine. This works without Internet access.
-The server must keep running. Fullscreen may require a user gesture and browser
-permission. Local progress belongs to the browser profile and origin; file URL
-storage varies by browser, so serving locally is recommended for reliable saves.
-No service worker or online first visit is required.
+The standalone HTML in `downloads/circuitlab.html` includes all required assets.
+No installation or Internet connection is needed for classroom use.
 
-## Use in class
+## Simple question course
 
-- Choose a part on the left, then tap the board, or drag it from the palette.
-- Drag placed parts to move them. Select a part, then Rotate or Delete.
-- Tap one terminal circle, then another to connect them. Existing terminals can
-  have multiple wires attached. Add a Wire junction where branches should meet.
-  Wire crossings **do not connect**. A wire can be selected and deleted.
-- Run circuit calculates DC steady state. Adjust the selected source voltage or
-  load resistance with its slider. Pause hides readings and stops flow animation.
-- Select a switch and use its toggle, or double-tap it. Undo/redo covers board edits.
-- CircuitLab has one navigation item: Mission, with 24 tasks.
-- Next is locked until the current circuit is verified; advancing clears the board,
-  selection, undo/redo history and timer while preserving completed-mission progress.
-- Back always works without completing the current task and opens the previous
-  mission with a clean board. At Mission 1, Back stays available and reports the boundary.
-- Hint shows a faint guide; Show answer gives a full labelled circuit picture.
-- Teacher tools provide a timer, Back, gated Next and Show answer.
-- Five example circuits remain available from the board’s example selector.
-- The 17-part palette retains IEC symbols, and the board has 3D parts/Symbols views.
-- Keyboard: R rotates selection, Delete removes, Escape cancels placement or
-  connection, Ctrl/Cmd Z undo, Ctrl/Cmd Shift Z redo. Touch/mouse/stylus pointer
-  controls do not require keyboard input.
+There are **25 questions**: question 1 is a teacher demonstration, followed by 24
+student tasks. The teacher starts with a cell, lamp and one wire already placed;
+joining the last wire lights the lamp. Each question has **two minutes**.
 
-The desktop layout targets a 1920 × 1080 landscape TV. On smaller displays the
-page scrolls; controls are also usable at 960 × 600. Sound is opt-in.
+Students recognise symbols and make diagrams. They do not need to calculate or
+adjust voltage, resistance, current or charge. Settings sliders and formula tasks
+are removed. Component values are safe presets; optional measurements remain in
+the folded Readings section. All 17 library symbols remain available.
 
-## Physics and numerical model
+1. Teacher demo — finish the cell-and-lamp loop.
+2. Cell and lamp.
+3. Battery and lamp.
+4. Closed switch.
+5. Open switch.
+6. One resistor.
+7. Resistor and lamp.
+8. Variable resistor.
+9. Series ammeter.
+10. Parallel voltmeter.
+11. Two series lamps.
+12. Two parallel lamp branches.
+13. Fuse.
+14. Diode.
+15. LED with a protective resistor.
+16. Thermistor.
+17. LDR.
+18. Capacitor.
+19. Junction dot.
+20. DC power supply.
+21. Rotate a symbol.
+22. Switch, resistor and lamp.
+23. Ammeter with two series lamps.
+24. Both meters with a lamp.
+25. Final diagram: lamp, switch and both meters.
 
-`solver.js` is a small, auditable modified-nodal-analysis solver with partial-pivot
-Gaussian elimination. It solves Kirchhoff current constraints and ideal voltage
-source constraints together; resistor branches obey Ohm’s law. Conducting islands
-have independent references. Floating voltmeters return **undefined**, never a
-fictional zero. No leakage resistance is inserted to conceal singular circuits.
+## Controls and help
 
-A purpose-built engine keeps this plain-file, offline application dependency-free.
-It is validated against analytical circuits in `../../tests/solver.test.js`; it is not a
-SPICE replacement. Supported models:
+- Tap a library part, then tap the board; or drag it into place.
+- Tap a part and use Rotate; R also turns it by 90°. Wires remain attached.
+- Drag from one terminal dot to another, or tap both dots, to make a wire.
+- The Wire library button selects continuous wiring, rather than placing short pieces.
+- Select a wire: drag an end to reconnect, or its middle handle to change its route.
+- Crossing wires do not join. Use a junction or shared terminal to create branches.
+- Double-tap a switch, or use its settings button, to open or close it.
+- Undo, redo, clear and delete work with mouse, touch and stylus.
+- The library uses IEC symbols. The board can show 3D-style parts or Symbols.
 
-| Component | DC model |
-|---|---|
-| Wires, junction, closed switch | ideal zero-resistance connections |
-| Cell, battery, supply | ideal fixed DC voltage; first/left terminal is + |
-| Resistor, variable, sensor | selected resistance in Ω, strictly positive |
-| Lamp | fixed resistance; glow relative to 1.8 W; not a hot-filament model |
-| Ammeter | ideal 0 V branch; signed series current |
-| Voltmeter | infinite resistance, no current; signed terminal voltage |
-| Capacitor | open circuit at DC steady state; no charging transient |
-| Diode | forward 0.7 V + 1 Ω; reverse open |
-| LED | forward 1.8 V + 1 Ω; reverse open; warning above 30 mA |
-| Fuse | selected small resistance, warning above 1 A; manual opening only |
+Hint shows a faint guide. **Show answer opens the complete labelled circuit
+immediately**, including a folded list of terminal connections. There are no
+dances, punishments, PINs, approval steps or viewing delays. Looking at an answer
+does not complete the student's question.
 
-NTC thermistors and LDRs expose measured resistance, without inventing a
-resistance-versus-temperature/light calibration. Diodes have no reverse breakdown,
-capacitance or exponential junction model. Up to 10 diodes/LEDs are supported;
-operating states are enumerated and checked for consistency. All quantities are SI.
-No AC, transient, inductive, electrochemical, thermal or automatic fuse simulation.
+Start on the board, or Run, starts a 02:00 countdown. Correct circuits stop time and
+unlock Next. A congratulations card confirms the answer and awards one original
+badge per question; repeated checks do not award duplicate progress. View circuit
+keeps the work on screen; Next question starts a clean student board. Back remains
+available without finishing. Returning to question 1 prepares the teacher demo.
 
-Polarity: values use terminal 0 minus terminal 1, and positive component current
-flows from terminal 0 to terminal 1. Rotating a component moves its terminals, but
-preserves its electrical wire attachments. **Rewire terminals to reverse polarity.**
-Negative source power means it supplies energy. Current arrows on wires follow
-Kirchhoff’s law; in ideal wire loops there is no unique distribution, so the display
-uses a spanning-tree distribution. Electron arrows reverse conventional current;
-this represents electron drift in metal wires, not charge carriers in every material.
+Timeout simply stops the attempt. Show answer still opens immediately, and Try
+again or Run starts another two-minute attempt. There are no penalties. Simulation
+Pause leaves the clock running; teacher timer controls can pause/reset it. Active
+deadlines survive reloads. Progress is stored in the browser; the former numeric
+course is kept in a separate local backup when migrating to this simpler course.
 
-Direct wire/ammeter shorts across sources stop simulation with no measurements.
-Other ideal-source loops with non-unique or inconsistent equations report an error.
-A disconnected terminal is reported. An open loop gives zero sustained current.
-A series voltmeter blocks current; a parallel ammeter can short a supply or load.
-An ammeter bypassing a load causes its calculated zero voltage/current, so inspect
-that load if it remains dark. Never transfer short-circuit experiments to real power
-supplies without suitable current limiting.
+## Accurate model, simple tasks
+
+The DC solver uses modified nodal analysis and partial-pivot elimination to satisfy
+Kirchhoff's laws. Wires and meters are ideal. Lamps use a labelled fixed resistance;
+NTC/LDR resistance is preset without temperature/light calibration. Capacitors are
+open at DC steady state; no charging animation is calculated. Diodes use a 0.7 V
+forward drop plus 1 Ω; LEDs use 1.8 V plus 1 Ω. Fuse overloads warn but do not melt
+fuses automatically. No AC, transients or thermal dynamics are simulated.
+
+Question validation checks correct parts and connections, not exact numerical
+readings. Open-switch and capacitor diagrams may correctly have zero sustained
+current. Their topology is checked separately; this never invents measurements.
+Short circuits and unsolvable ideal-source loops report problems without fabricated
+readings. Negative readings use the opposite terminal polarity. All quantities use SI.
 
 ## Validation
 
-Node.js (tested with 24) is needed only for automated numerical tests:
+From the repository root:
 
 ```sh
 npm test
-```
-
-17 tests cover analytical series/parallel results, power balance, meters, open
-switches, shorts, floating readings, capacitors, diode direction/voltage model,
-sensors, multiple islands and invalid networks. There is no npm install step.
-
-Browser integration tests use Python Playwright and system Chromium. Install those
-development tools if unavailable, then:
-
-```sh
+python scripts/build_site.py
+python tests/site_test.py
+python tests/tool_pipeline_test.py
+python tests/mission_course_test.py
+python tests/mission_help_test.py
+python tests/mission_progress_test.py
+python tests/mission_clock_test.py
+python tests/completion_popup_test.py
 python tests/browser_test.py
+python tests/wire_gestures_test.py
+python tests/physical_parts_test.py
+python tests/site_browser_test.py
+python tests/cached_assets_test.py
 ```
 
-The test starts and stops its own local server, blocks non-local requests and checks
-real touch/mouse wiring, drag, rotate, delete, history, every example, missions,
-sliders, switches, teacher controls, mission progression, local persistence
-and responsive layout. No test tools are needed to use the application.
-See `../../guides/examples.html` for expected readings and `../../guides/classroom.html` for a 45-minute lesson. Run automated test commands from the repository root.
-
-## Component views
-
-Placed components use a shaded 3D-style SVG view by default. The palette keeps IEC
-symbols; choose Symbols on the board to compare circuit diagrams. The preference
-is saved locally. The inspector’s Circuit symbol section shows the matching symbol.
-Meter displays and lamp/LED glow use solver results and clear while paused. These
-are depth illustrations on the existing flat workbench, with unchanged terminals,
-rotation controls and DC models; there is no 3D camera or WebGL dependency.
-
-Run `python tests/physical_parts_test.py` from the repository root for appearance,
-view persistence, drop behavior, readings and 375/960/1920 layout checks.
-
-## Hints and answers
-
-Hint shows the required IEC symbols and a first connection as a faint board guide.
-Show answer opens a complete labelled circuit picture; the Connections fold lists
-terminal pairs (for example, 1a to 2a). All 24 missions have their own validated
-reference circuit. Teacher Show answer opens the picture too.
-Guides never change the student's circuit, undo history, readings or points, and
-clear when the task changes. The twenty-four reference circuits are checked against the
-real mission validator in `tests/mission_help_test.py`.
-
-## Rotate and stretch wires
-
-Tap a placed part, then its on-board Rotate button (90° steps). The labelled
-Rotate toolbar button and R key also work in both 3D parts and Symbols views.
-Wires stay attached to the same electrical terminals during rotation.
-
-The Wire palette button selects the wiring tool rather than placing small wire
-pieces. Drag from one terminal dot to another to create a complete wire of any needed
-length. Tapping the two dots still works. A wire snaps only to actual terminals;
-dropping in empty space cancels and leaves existing connections intact.
-
-Tap a wire to reveal its handles. Drag either end to another terminal to reconnect
-it, or drag the middle handle into empty space to stretch or shorten the route.
-Auto route in the wire settings removes the manual bend. Moving a part also
-resizes all attached wires. Wire length changes the layout only: wires remain
-ideal, zero-resistance conductors in the DC model. Undo/redo and local saves cover
-wire reconnections and route edits. Wire crossings remain unconnected.
-
-`python tests/wire_gestures_test.py` checks actual mouse/touch gestures, rotation,
-stretch/shorten, reconnect, cancellation, history, persistence and layout sizes.
-
-## Mission sequence
-
-1–10: lamp, switch, series ammeter, parallel voltmeter, series resistors, parallel
-resistors, variable resistance, LED protection, sensing and combined meters.
-11–24: Ohm’s law, reduced current, a single cell, series lamps, parallel lamps,
-LDR tuning, thermistor resistance, forward diode, fuse and the final combined circuit.
-
-`tests/mission_course_test.py` checks every solution and rejects broken circuits.
-`tests/mission_progress_test.py` checks gated Next, unrestricted Back, clear-board
-transitions, progress retention and migration of old saves to mission-only navigation.
-
-Missions 21–24 add unequal series voltage sharing, unequal parallel branch currents,
-a switched LED and a final two-meter measurement check.
-
-## 90-second attempts and five-second dances
-
-Use the single central Start button, or press Run, to begin the mission's 01:30
-countdown. The highlighted Time left card shows the remaining seconds and whether
-the mission is ready, counting down, verified, paused by the teacher or expired.
-The duplicate Start control below the board has been removed. Correct circuits
-stop the clock and unlock Next. Back remains unrestricted; active deadlines survive
-reloads. Simulation Pause does not stop mission time.
-
-Show answer opens an actual full-body 3D robot dance. After **five seconds of
-loaded playback**, See answer unlocks; no teacher PIN, approval form or camera is
-used. The animation keeps moving while students decide, and Replay restarts the
-five-second gate. The assignment is saved per mission and avoids adjacent repeats.
-Seven tempo/start-phase variants use one licensed dance clip, not seven distinct
-motion-captured performances. A seated or spoken alternative remains available.
-
-On timeout the same saved dance appears. After five seconds, Try again prepares a
-fresh 90-second attempt without revealing an answer or marking the mission complete.
-Pending retries remain required when navigating away and back.
-
-The robot is the CC0 RobotExpressive model by Tomás Laulhé (Quaternius), downloaded
-from the official Three.js r170 examples. Only the full-body Dance clip is retained.
-See `vendor/ASSETS.md` for licensing, provenance and rebuild steps. Three.js and the
-model are bundled into `vendor/dance-scene.js`, and into the standalone HTML download;
-there are no runtime CDNs, remote models or streamed video. A shaped animated toy
-robot provides a labelled simple view when WebGL is unavailable. Reduced-motion
-preferences show a still pose until the user deliberately chooses Play dance.
-
-The normal site build uses committed assets and needs no npm install. To change
-or rebuild the 3D renderer: `npm ci`, then `npm run build:dance`. CSS/JS references
-in `dist/` receive content-hash query versions to prevent stale-release cache mixes;
-plain local use and standalone HTML remain supported.
-
-Tests: `dance_gate_test.py` verifies visible changing 3D frames and the five-second
-gate; `cached_assets_test.py` tests old-cache resistance and standalone rendering;
-`mission_clock_test.py` tests real deadlines, retries, pause and reload. Run with
-`python tests/<name>.py` from the repository root.
+Node runs 17 analytical circuit tests. Python build/static tests need no packages.
+Browser tests use Python Playwright and system Chromium as development tools only.
+They cover all 25 diagrams, broken connections, no numeric targets/settings,
+immediate answers, the real teacher demo, reward correctness, two-minute timeouts,
+save migration, touch wiring, rotation and 375/960/1920 layouts.

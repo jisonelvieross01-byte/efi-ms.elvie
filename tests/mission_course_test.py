@@ -1,39 +1,53 @@
-"""All twenty-four missions need physically valid answers; broken/wrong-value circuits must fail."""
+"""One teacher demonstration plus 24 simple, topologically validated symbol tasks."""
 from pathlib import Path
-from answer_gate_helpers import approve_answer
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
 from functools import partial
 from threading import Thread
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
-server=ThreadingHTTPServer(('127.0.0.1',0),partial(SimpleHTTPRequestHandler,directory=str(ROOT)))
+server=ThreadingHTTPServer(('127.0.0.1',0),partial(SimpleHTTPRequestHandler,directory=str(ROOT/'dist')))
 Thread(target=server.serve_forever,daemon=True).start()
 with sync_playwright() as p:
- browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader'])
- page=browser.new_page(viewport={'width':1920,'height':1080});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+ browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
+ page=browser.new_page(viewport={'width':1920,'height':1080});errors=[];requests=[]
+ page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda r:requests.append(r.url))
  page.route('**/*',lambda r:r.continue_() if r.request.url.startswith('http://127.0.0.1:') else r.abort())
  page.goto(f'http://127.0.0.1:{server.server_port}/tools/circuitlab/index.html')
- assert page.evaluate('missions.length')==24
+ assert page.evaluate('missions.length')==25
+ assert 'Teacher demo' in page.locator('#activity').inner_text()
+ assert page.locator('#missionClock').inner_text()=='02:00'
+ assert page.locator('#parts button').count()==17
+ assert page.evaluate('state.components.length===2 && state.wires.length===1')
  assert page.locator('#modes button').count()==1
- for i in range(24):
-  out=page.evaluate('''i=>{const previous=state,oldResult=result;try{state=solutionCircuit(i);result=CircuitSolver.solve(state);const good=checkMission(i);const current=Math.abs(result.readings[state.components[0].id].current);state.wires.shift();result=CircuitSolver.solve(state);return {good,current,broken:checkMission(i)};}finally{state=previous;result=oldResult;}}''',i)
-  assert out['good'],(i,out)
-  assert not out['broken'],i
-  if i>=10:
-   expected={10:.06,11:.03,12:.15,13:.15,14:.6,15:.03,16:.05,17:5.3/101,18:6/101,19:6/220,20:.02,21:.09,22:4.2/331,23:.02}[i]
-   assert abs(out['current']-expected)<1e-8,(i,out,expected)
-   wrong=page.evaluate('''i=>{const previous=state,oldResult=result;try{state=solutionCircuit(i);state.components[0].value=12;result=CircuitSolver.solve(state);return checkMission(i);}finally{state=previous;result=oldResult;}}''',i)
-   assert not wrong,('wrong source value accepted',i)
- # Each mission gets a title, hint, full answer, and active navigation at every size.
+ for i in range(25):
+  result=page.evaluate('''i=>{const old=state,previous=result;try{state=solutionCircuit(i);result=CircuitSolver.solve(state);const valid=checkMission(i),active=result.active;state.wires.shift();result=CircuitSolver.solve(state);return {valid,active,broken:checkMission(i)};}finally{state=old;result=previous;}}''',i)
+  assert result['valid'],(i,result)
+  assert not result['broken'],(i,result)
+  assert result['active']==(i not in [4,17]),(i,result)
+  page.evaluate('(i)=>{mission=i;activity()}',i)
+  before=page.evaluate('JSON.stringify({state,classroom,history,future})')
+  page.locator('#showAnswer').click();assert page.locator('#answerDialog').is_visible()
+  assert page.locator('#answerDrawing [data-guide-part]').count()==page.evaluate('solutionCircuit(mission).components.length')
+  assert page.evaluate('JSON.stringify({state,classroom,history,future})')==before
+  page.locator('#closeAnswer').click()
+ # No numerical targets in questions, no settings sliders for students.
+ assert page.evaluate('missions.every(m=>!/[0-9].*(Ω|mA| A| V)/.test(m[1]))')
+ for type in ['cell','battery','resistor','variable','thermistor','ldr']:
+  page.evaluate('(type)=>{const c=part(type,650,380);state.components=[c];state.wires=[];selected=c.id;changed()}',type)
+  assert page.locator('#inspector input').count()==0,type
+ # Basic recognition tasks accept different safe preset values; no exact current target is needed.
+ assert page.evaluate('(()=>{const old=state,previous=result;try{state=solutionCircuit(6);state.components.find(c=>c.type==="resistor").value=200;result=CircuitSolver.solve(state);return checkMission(6)}finally{state=old;result=previous}})()')
+ # Old dance/PIN/permission controls and external resources are absent.
+ assert page.locator('#danceDialog,#teacherPinDialog,#approvalPin,#continueDance').count()==0
+ assert page.evaluate('typeof CircuitDance')=='undefined'
+ assert not list((ROOT/'dist').rglob('*.glb')) and not list((ROOT/'dist').rglob('*.bvh'))
  for width in [375,960,1920]:
-  page.set_viewport_size({'width':width,'height':900})
-  page.evaluate('mission=19;activity()');page.locator('#hint').click()
-  assert page.locator('#hintLayer [data-guide-part]').count()==6
-  approve_answer(page);assert page.locator('#answerDialog').is_visible()
+  page.set_viewport_size({'width':width,'height':900});page.evaluate('mission=24;activity()')
+  page.locator('#showAnswer').click();assert page.locator('#answerDialog').is_visible()
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   page.locator('#closeAnswer').click()
-  page.locator('#missionBack').click();assert page.evaluate('mission')==18
  assert not errors,errors
+ assert all('127.0.0.1' in u or not u.startswith('http') for u in requests)
  browser.close()
 server.shutdown()
-print('PASS: 24 valid answer circuits; 24 open-circuit rejections; fourteen independent current references and wrong-voltage rejections; mission-only navigation, hints/answers and Back at 375/960/1920.')
+print('PASS: 25 simple questions, teacher demo, 25 correct/25 broken diagrams, open-switch/capacitor cases, instant answers, no sliders/number targets/dances, and 3 layouts.')
