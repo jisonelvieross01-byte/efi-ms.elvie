@@ -41,7 +41,7 @@ function beep(){if(!sound)return;try{const ac=new (window.AudioContext||window.w
 // A wall-clock deadline keeps a two-minute attempt accurate across slow frames and reloads.
 const MISSION_SECONDS=120;
 let missionPhase='ready',missionDeadline=null;
-function resetAttempt(){missionPhase='ready';missionDeadline=null;remaining=MISSION_SECONDS;timerOn=false;running=false;result=null;missionPassSignature='';completionAnnounced=false;$('#completionDialog').close();}
+function resetAttempt(){missionPhase='ready';missionDeadline=null;remaining=MISSION_SECONDS;timerOn=false;running=false;result=null;missionPassSignature='';completionAnnounced=false;guideVisible=false;$('#completionDialog').close();$('#answerDialog').close();renderGuide();}
 function refreshMissionClock(){
  const locked=missionPhase==='ready'||missionPhase==='paused'||missionPhase==='expired';
  $('#missionStartOverlay').hidden=!locked;
@@ -52,6 +52,7 @@ function refreshMissionClock(){
  $('#missionClock').textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');
  $('#missionClock').classList.toggle('time-low',remaining<=15&&missionPhase==='running');$('#missionTimeBar').value=remaining;$('#missionClockCard').dataset.phase=missionPhase;$('#missionClockState').textContent=({ready:'Press Start or Run',running:'Counting down',paused:'Teacher pause',complete:'Verified',expired:'Time’s up'})[missionPhase];
  $('#missionClock').setAttribute('aria-label',remaining+' seconds remaining');
+ refreshHelpAvailability();
 }
 function beginMission(){
  if(missionPhase==='expired')resetAttempt();
@@ -287,11 +288,23 @@ function drawGuide(container,network,answer=false){
 function renderGuide(){
  if(guideKey!==helpKey()){guideKey=helpKey();guideVisible=false;$('#completionDialog').close();$('#answerDialog').close();$('#answerDrawing').replaceChildren();$('#answerConnections').replaceChildren();}
  const enabled=mode!=='explorer';$('#boardHelp').hidden=!enabled;
- $('#hint').setAttribute('aria-pressed',guideVisible);$('#hint').textContent=guideVisible?'Hide hint':'Hint';
+ $('#hint').setAttribute('aria-pressed',guideVisible);refreshHelpAvailability();
  $('#hintLayer').replaceChildren();$('#hintLabel').hidden=!guideVisible;$('#empty').hidden=!!state.components.length||guideVisible;
  if(guideVisible&&enabled)drawGuide($('#hintLayer'),solutionCircuit(guideMission()));
 }
-function showAnswer(){revealAnswer();}
+// Help follows active attempt time; pausing does not advance either unlock.
+function helpAvailable(kind){
+ return missionPhase==='complete'||(missionPhase!=='ready'&&remaining<=(kind==='hint'?30:40));
+}
+function refreshHelpAvailability(){
+ for(const [id,kind,label] of [['hint','hint','Hint'],['showAnswer','answer','Show answer'],['reveal','answer','Show answer']]){
+  const button=$('#'+id),available=helpAvailable(kind);
+  button.disabled=!available;
+  button.textContent=available?(kind==='hint'&&guideVisible?'Hide hint':label):label+' · '+Math.max(0,remaining-(kind==='hint'?30:40))+'s';
+  button.title=available?label:(kind==='hint'?'Hint opens after 1 minute 30 seconds.':'Show answer opens with 40 seconds left.');
+ }
+}
+function showAnswer(){tickMissionClock();if(helpAvailable('answer'))revealAnswer();}
 function revealAnswer(){
  const index=guideMission(),network=solutionCircuit(index),calculated=CircuitSolver.solve(network);
  if(!calculated.ok){notify('This guide is unavailable.');return;}
@@ -303,7 +316,7 @@ function revealAnswer(){
  $('#answerParts').textContent=network.components.map((c,i)=>`${i+1}. ${PARTS[c.type].name}`).join(' · ');
  $('#answerDialog').showModal();
 }
-$('#hint').onclick=()=>{guideVisible=!guideVisible;renderGuide();};
+$('#hint').onclick=()=>{tickMissionClock();if(!helpAvailable('hint'))return;guideVisible=!guideVisible;renderGuide();};
 $('#showAnswer').onclick=showAnswer;
 $('#closeAnswer').onclick=()=>$('#answerDialog').close();
 

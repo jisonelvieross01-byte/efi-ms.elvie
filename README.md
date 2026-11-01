@@ -77,12 +77,10 @@ library origin and restrict external resource loading; only import trusted files
 CircuitLab uses an explicitly labelled DC steady-state model. See the in-app
 model panel and `tools/circuitlab/README.md` for its scientific limitations.
 
-CircuitLab now has one teacher demonstration and 24 simple student questions,
-two-minute timers, immediate answers and no numerical adjustment controls.
-The congratulations popup appears only for a verified circuit. No dance or
-penalty features, third-party runtime assets or development dependencies are needed.
+CircuitLab has one teacher demonstration and 24 simple student questions, two-minute
+attempts and a verified-answer achievement popup. No dances, penalties, numerical
+adjustments or npm packages are needed.
 
-CircuitLab has a teacher demonstration followed by 24 simple student questions,
-two-minute attempts, immediate answers and a verified-answer achievement popup.
-All dance assets, viewing gates, penalties and student numerical adjustment
-controls have been removed. No npm packages are needed.
+Hint unlocks after 1 minute 30 seconds (30 seconds left). Show answer unlocks
+with 40 seconds left. Pausing stops both countdowns. Both remain available after
+time runs out; completed questions allow review.

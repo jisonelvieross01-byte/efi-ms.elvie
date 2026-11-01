@@ -1,3 +1,4 @@
+from answer_gate_helpers import unlock_help
 """A previous cached, unversioned stylesheet must not break the newly deployed UI."""
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -29,6 +30,7 @@ with sync_playwright() as p:
  # The standalone app has immediate answers and no obsolete renderer assets.
  page.goto(f'http://127.0.0.1:{server.server_port}/downloads/circuitlab.html')
  assert page.evaluate('typeof CircuitDance')=='undefined'
+ unlock_help(page)
  page.locator('#showAnswer').click();assert page.locator('#answerDialog').is_visible()
  browser.close()
 server.shutdown()

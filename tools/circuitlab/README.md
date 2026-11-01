@@ -65,9 +65,9 @@ the folded Readings section. All 17 library symbols remain available.
 - Undo, redo, clear and delete work with mouse, touch and stylus.
 - The library uses IEC symbols. The board can show 3D-style parts or Symbols.
 
-Hint shows a faint guide. **Show answer opens the complete labelled circuit
+Hint shows a faint guide. **Show answer unlocks with 40 seconds left and opens the complete labelled circuit
 immediately**, including a folded list of terminal connections. There are no
-dances, punishments, PINs, approval steps or viewing delays. Looking at an answer
+dances, punishments, PINs, approval steps or extra viewing delays. Looking at an answer
 does not complete the student's question.
 
 Start on the board, or Run, starts a 02:00 countdown. Correct circuits stop time and
@@ -121,5 +121,7 @@ python tests/cached_assets_test.py
 Node runs 17 analytical circuit tests. Python build/static tests need no packages.
 Browser tests use Python Playwright and system Chromium as development tools only.
 They cover all 25 diagrams, broken connections, no numeric targets/settings,
-immediate answers, the real teacher demo, reward correctness, two-minute timeouts,
+timed help unlocks, the real teacher demo, reward correctness, two-minute timeouts,
 save migration, touch wiring, rotation and 375/960/1920 layouts.
+
+Hint unlocks after 1 minute 30 seconds (30 seconds left). Show answer unlocks with 40 seconds left. Both stay available after time runs out; completed questions allow review.

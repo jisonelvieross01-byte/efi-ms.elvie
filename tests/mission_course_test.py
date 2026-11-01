@@ -1,3 +1,4 @@
+from answer_gate_helpers import unlock_help
 """One teacher demonstration plus 24 simple, topologically validated symbol tasks."""
 from pathlib import Path
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
@@ -26,6 +27,7 @@ with sync_playwright() as p:
   assert result['active']==(i not in [4,17]),(i,result)
   page.evaluate('(i)=>{mission=i;activity()}',i)
   before=page.evaluate('JSON.stringify({state,classroom,history,future})')
+  unlock_help(page)
   page.locator('#showAnswer').click();assert page.locator('#answerDialog').is_visible()
   assert page.locator('#answerDrawing [data-guide-part]').count()==page.evaluate('solutionCircuit(mission).components.length')
   assert page.evaluate('JSON.stringify({state,classroom,history,future})')==before
@@ -43,6 +45,7 @@ with sync_playwright() as p:
  assert not list((ROOT/'dist').rglob('*.glb')) and not list((ROOT/'dist').rglob('*.bvh'))
  for width in [375,960,1920]:
   page.set_viewport_size({'width':width,'height':900});page.evaluate('mission=24;activity()')
+  unlock_help(page)
   page.locator('#showAnswer').click();assert page.locator('#answerDialog').is_visible()
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   page.locator('#closeAnswer').click()

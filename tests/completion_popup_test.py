@@ -1,3 +1,4 @@
+from answer_gate_helpers import unlock_help
 """Original achievement reveal appears only for a verified answer, once per attempt."""
 from pathlib import Path
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
@@ -30,6 +31,7 @@ with sync_playwright() as p:
  page.evaluate('changed()');assert page.locator('#completionDialog').is_hidden()
  page.locator('#missionNext').tap();assert page.evaluate('mission')==1
  assert page.evaluate('state.components.length')==0
+ unlock_help(page)
  page.locator('#showAnswer').tap();assert page.locator('#answerDialog').is_visible()
  page.locator('#closeAnswer').click();assert page.locator('#completionDialog').is_hidden()
  page.evaluate('state=solutionCircuit(mission);beginMission();changed()')

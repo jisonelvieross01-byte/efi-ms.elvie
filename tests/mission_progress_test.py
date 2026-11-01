@@ -1,3 +1,4 @@
+from answer_gate_helpers import unlock_help
 """All 25 symbol questions gate Next, allow Back, and preserve progress on reload."""
 from pathlib import Path
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
@@ -15,6 +16,7 @@ with sync_playwright() as p:
  page.goto(f'http://127.0.0.1:{server.server_port}/tools/circuitlab/index.html')
  assert page.locator('#missionNext').is_disabled();assert page.locator('#missionBack').is_enabled()
  page.evaluate('nextMission()');assert page.evaluate('mission')==0
+ unlock_help(page)
  page.locator('#showAnswer').click();page.locator('#closeAnswer').click();assert page.locator('#missionNext').is_disabled()
  for i in range(25):
   assert page.evaluate('mission')==i

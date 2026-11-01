@@ -1,3 +1,4 @@
+from answer_gate_helpers import unlock_help
 """Offline mouse/touch circuit controls remain usable in the simplified course."""
 from pathlib import Path
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
@@ -35,6 +36,7 @@ with sync_playwright() as p:
   page.select_option('#examples',name);assert page.evaluate('result.ok && result.active'),name
  page.evaluate("selected=state.components.find(c=>c.type==='resistor').id;renderInspector()")
  assert page.locator('#inspector input').count()==0
+ unlock_help(page)
  page.locator('#showAnswer').click();assert page.locator('#answerDialog').is_visible();page.locator('#closeAnswer').click()
  before=page.evaluate('JSON.stringify(state)');page.reload();assert page.evaluate('JSON.stringify(state)')==before
  for width in [375,960,1920]:
