@@ -7,3 +7,5 @@ instant answer help and a diagram-based exit ticket. The complete course has
 There are no calculations, parameter adjustments, dances or penalties.
 
 Hint unlocks after 30 seconds (1 minute 30 seconds left). Show answer unlocks with 40 seconds left. Both stay available after time runs out; completed questions allow review.
+
+Restart beside the clock starts a fresh two-minute attempt and keeps the circuit, undo history and progress. Hint and Show answer countdowns restart too. Restart is disabled after a verified answer.

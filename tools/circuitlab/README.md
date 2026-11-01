@@ -125,3 +125,5 @@ timed help unlocks, the real teacher demo, reward correctness, two-minute timeou
 save migration, touch wiring, rotation and 375/960/1920 layouts.
 
 Hint unlocks after 30 seconds (1 minute 30 seconds left). Show answer unlocks with 40 seconds left. Both stay available after time runs out; completed questions allow review.
+
+Restart beside the clock starts a fresh two-minute attempt and keeps the circuit, undo history and progress. Hint and Show answer countdowns restart too. Restart is disabled after a verified answer.

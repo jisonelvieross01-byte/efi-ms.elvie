@@ -198,7 +198,7 @@ dialog::backdrop{background:#0f2a3a88;backdrop-filter:blur(3px)}
 
 /* One highlighted countdown; the sole Start button remains inside the board. */
 .board-help{align-items:center;flex-wrap:wrap}
-.mission-clock-card{margin-right:auto;display:grid;grid-template-columns:1fr auto;gap:0 15px;min-width:210px;background:var(--navy);color:white;padding:9px 16px;border-radius:14px;box-shadow:0 4px 16px #0f2a3a24;border:2px solid var(--teal)}
+.mission-clock-card{margin-right:auto;display:grid;grid-template-columns:1fr auto auto;gap:0 12px;min-width:210px;background:var(--navy);color:white;padding:9px 16px;border-radius:14px;box-shadow:0 4px 16px #0f2a3a24;border:2px solid var(--teal)}
 .clock-label{font-size:10px;letter-spacing:1.7px;font-weight:750;align-self:end;color:var(--line)}
 #missionClock{grid-column:2;grid-row:1/3;font-size:37px;line-height:1.15;font-weight:850;font-variant-numeric:tabular-nums;color:white;letter-spacing:1px}
 #missionClockState{font-size:11px;color:var(--line)}
@@ -232,3 +232,5 @@ dialog::backdrop{background:#0f2a3a88;backdrop-filter:blur(3px)}
 @keyframes reward-reveal{from{opacity:0;transform:scale(.45) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
 @keyframes reward-spark{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.completion-art *{animation:none!important}}
+
+#timerRestart{grid-column:3;grid-row:1/3;align-self:center;min-height:44px;padding:8px;background:white;color:var(--navy);border-color:var(--line)}

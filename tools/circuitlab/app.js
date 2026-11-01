@@ -49,6 +49,7 @@ function refreshMissionClock(){
  $('#missionStartTitle').textContent=missionPhase==='expired'?'Time’s up':missionPhase==='paused'?'Paused':'Ready?';
  $('#missionStartNote').textContent=missionPhase==='expired'?'Show answer can help, or try again.':'Two minutes for this question.';
  $('#run').disabled=false;
+ $('#timerRestart').disabled=missionPhase==='complete';
  $('#missionClock').textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');
  $('#missionClock').classList.toggle('time-low',remaining<=15&&missionPhase==='running');$('#missionTimeBar').value=remaining;$('#missionClockCard').dataset.phase=missionPhase;$('#missionClockState').textContent=({ready:'Press Start or Run',running:'Counting down',paused:'Teacher pause',complete:'Verified',expired:'Time’s up'})[missionPhase];
  $('#missionClock').setAttribute('aria-label',remaining+' seconds remaining');
@@ -59,6 +60,11 @@ function beginMission(){
  if(missionPhase==='complete'){running=true;changed();return;}
  missionPhase='running';missionDeadline=Date.now()+remaining*1000;timerOn=true;running=true;changed();renderTimer();
 }
+function restartMissionTimer(){
+ if(missionPhase==='complete')return;
+ resetAttempt();beginMission();notify('Two more minutes. Your circuit is kept.');
+}
+$('#timerRestart').onclick=restartMissionTimer;
 function pauseMission(){
  if(missionPhase==='running'){remaining=Math.max(0,Math.ceil((missionDeadline-Date.now())/1000));missionPhase='paused';}
  timerOn=false;missionDeadline=null;running=false;changed();renderTimer();
