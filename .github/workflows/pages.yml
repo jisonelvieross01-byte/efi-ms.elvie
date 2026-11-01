@@ -24,6 +24,7 @@ jobs:
       - run: npm test
       - run: python scripts/build_site.py
       - run: python tests/site_test.py
+      - run: python tests/tool_pipeline_test.py
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

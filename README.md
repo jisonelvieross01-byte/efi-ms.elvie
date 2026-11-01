@@ -54,6 +54,7 @@ to a static host. No hosting tokens belong in client-side HTML.
 npm test
 python scripts/build_site.py
 python tests/site_test.py
+python tests/tool_pipeline_test.py
 python tests/site_browser_test.py
 python tests/browser_test.py
 ```
