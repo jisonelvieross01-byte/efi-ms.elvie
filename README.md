@@ -65,6 +65,10 @@ servers. Static checks ensure all HTML links resolve and downloads are bundled.
 Numerical tests exercise 17 circuit cases; integration tests cover touchscreen
 controls, all 25 symbol-question validators, the catalog, imports, downloads and layouts.
 
+CircuitLab’s header and the personal tool viewer include **← Go back** to return
+to Lab Home. The full-site download supports this navigation offline; a standalone
+tool file does not include Lab Home.
+
 ## Storage and privacy
 
 Public catalog files are deployed together. Personal uploads are saved only in the
