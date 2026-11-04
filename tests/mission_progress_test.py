@@ -1,5 +1,5 @@
 from answer_gate_helpers import unlock_help
-"""All 25 symbol questions gate Next, allow Back, and preserve progress on reload."""
+"""All 40 symbol questions gate Next, allow Back, and preserve progress on reload."""
 from pathlib import Path
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
 from functools import partial
@@ -18,7 +18,7 @@ with sync_playwright() as p:
  page.evaluate('nextMission()');assert page.evaluate('mission')==0
  unlock_help(page)
  page.locator('#showAnswer').click();page.locator('#closeAnswer').click();assert page.locator('#missionNext').is_disabled()
- for i in range(25):
+ for i in range(40):
   assert page.evaluate('mission')==i
   assert page.locator('#missionNext').is_disabled()
   page.evaluate('state=solutionCircuit(mission);beginMission();changed()')
@@ -26,14 +26,24 @@ with sync_playwright() as p:
   assert page.locator('#missionNext').is_enabled()
   page.locator('#missionNext').click()
   assert page.evaluate('remaining')==120
-  assert page.evaluate('state.components.length')==(2 if i==24 else 0)
- assert page.evaluate('classroom.completed.length')==25
+  assert page.evaluate('state.components.length')==(2 if i==39 else 0)
+ assert page.evaluate('classroom.completed.length')==40
  page.evaluate('startMission(24)');assert page.locator('#missionBack').is_enabled()
  page.locator('#missionBack').click();assert page.evaluate('mission')==23
  assert page.locator('#missionNext').is_disabled()
  page.reload();assert page.evaluate('mission')==23
- assert page.evaluate('classroom.completed.length')==25
+ assert page.evaluate('classroom.completed.length')==40
  assert page.locator('#missionNext').is_disabled()
+ # Existing 25-question saves retain their board, awards and two-minute attempt.
+ page.evaluate('''()=>{startMission(24);state=solutionCircuit(24);state.wires.pop();classroom.completed=Array.from({length:25},(_,i)=>i);classroom.awarded=[24];classroom.scores=[10,0];missionPhase='paused';remaining=75;persist();}''')
+ old_work=page.evaluate('JSON.stringify({state,classroom})')
+ page.reload()
+ assert page.evaluate('JSON.stringify({state,classroom})')==old_work
+ assert page.evaluate('mission')==24 and page.evaluate('remaining')==75
+ assert page.evaluate('missionPhase')=='paused'
+ page.evaluate('startMission(25)')
+ assert page.evaluate('state.components.length')==0
+ assert 'Question 26/40' in page.locator('#activity').inner_text()
  # A saved old numeric course is backed up rather than miscounted as new symbol tasks.
  page.evaluate('const old={state:{components:[],wires:[]},mission:19,classroom:{completed:[1,2]},attempt:{phase:"expired",remaining:0},retryLocks:{19:true}};localStorage.setItem("circuitlab-v1",JSON.stringify(old))')
  page.reload();assert page.evaluate('mission')==0
@@ -44,4 +54,4 @@ with sync_playwright() as p:
  assert not errors,errors
  browser.close()
 server.shutdown()
-print('PASS: all 25 gated transitions, clean student boards, teacher demo preparation, unrestricted Back, progress reload and safe old-course migration.')
+print('PASS: all 40 gated transitions, clean student boards, teacher demo preparation, unrestricted Back, progress reload and safe old-course migration.')

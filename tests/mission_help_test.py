@@ -14,7 +14,7 @@ with sync_playwright() as p:
  page=browser.new_page(viewport={'width':1920,'height':1080});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  auto_dismiss_completion(page)
  page.goto(f'http://127.0.0.1:{server.server_port}/tools/circuitlab/index.html')
- for i in range(25):
+ for i in range(40):
   page.evaluate('(i)=>{mission=i;activity()}',i)
   unlock_help(page)
   before=page.evaluate('JSON.stringify({state,serial,history,future,classroom,saved:localStorage.getItem("circuitlab-v1")})')
@@ -31,11 +31,11 @@ with sync_playwright() as p:
   page.evaluate('state=solutionCircuit(mission);beginMission();running=true;changed()')
   assert page.locator('#missionNext').is_enabled();page.locator('#missionNext').click()
   assert page.locator('#hintLayer [data-guide-part]').count()==0
-  assert page.evaluate('state.wires.length')==(1 if i==24 else 0)
+  assert page.evaluate('state.wires.length')==(1 if i==39 else 0)
  unlock_help(page)
  page.locator('#teacher').click();page.locator('#reveal').click()
  assert page.locator('#answerDialog').is_visible();page.locator('#closeAnswer').click()
  assert not errors,errors
  browser.close()
 server.shutdown()
-print('PASS: instant answer pictures and connection lists for all 25 questions; hints/answers preserve circuits, scores and history; no extra waiting or permission gate once unlocked.')
+print('PASS: instant answer pictures and connection lists for all 40 questions; hints/answers preserve circuits, scores and history; no extra waiting or permission gate once unlocked.')

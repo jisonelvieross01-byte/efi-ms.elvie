@@ -18,7 +18,7 @@ No installation or Internet connection is needed for classroom use.
 
 ## Simple question course
 
-There are **25 questions**: question 1 is a teacher demonstration, followed by 24
+There are **40 questions**: question 1 is a teacher demonstration, followed by 39
 student tasks. The teacher starts with a cell, lamp and one wire already placed;
 joining the last wire lights the lamp. Each question has **two minutes**.
 
@@ -52,6 +52,25 @@ the folded Readings section. All 17 library symbols remain available.
 23. Ammeter with two series lamps.
 24. Both meters with a lamp.
 25. Final diagram: lamp, switch and both meters.
+26. Battery, closed switch and lamp.
+27. Battery, open switch and lamp.
+28. Battery and resistor.
+29. Battery, variable resistor and lamp.
+30. Battery, ammeter and lamp.
+31. Battery, voltmeter and lamp.
+32. Battery, thermistor and lamp.
+33. Battery, LDR and lamp.
+34. DC supply and resistor.
+35. DC supply, ammeter and lamp.
+36. DC supply, voltmeter and lamp.
+37. DC supply, capacitor and resistor.
+38. Cell, fuse and resistor.
+39. Two series resistors.
+40. Two parallel resistor branches.
+
+Questions 26–40 practise familiar symbols and connections at the same difficulty;
+there are no new calculations or settings. Saved progress from the original
+25 questions carries over, with the extra questions ready to try.
 
 ## Controls and help
 
@@ -120,7 +139,7 @@ python tests/cached_assets_test.py
 
 Node runs 17 analytical circuit tests. Python build/static tests need no packages.
 Browser tests use Python Playwright and system Chromium as development tools only.
-They cover all 25 diagrams, broken connections, no numeric targets/settings,
+They cover all 40 diagrams, broken connections, no numeric targets/settings,
 timed help unlocks, the real teacher demo, reward correctness, two-minute timeouts,
 save migration, touch wiring, rotation and 375/960/1920 layouts.
 
