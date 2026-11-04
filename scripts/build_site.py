@@ -18,6 +18,8 @@ def inline_html(entry):
  def script(m):return '<script>'+local(m[1]).replace('</script','<\\/script')+'</script>'
  text=re.sub(r'<link\b[^>]*href="([^"?]+\.css(?:\?[^"]*)?)"[^>]*>',style,text)
  text=re.sub(r'<script\b[^>]*src="([^"?]+\.js(?:\?[^"]*)?)"[^>]*>\s*</script>',script,text)
+ # Standalone files live in downloads/, one level below Lab Home.
+ text=text.replace('href="../../index.html#library"','href="../index.html#library"')
  return text
 
 def version_assets(file):

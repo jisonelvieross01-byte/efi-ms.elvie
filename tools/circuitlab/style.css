@@ -3,7 +3,7 @@
 button,input,select{font:inherit}
 button,select{min-height:42px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);padding:8px 14px;cursor:pointer;transition:background .15s,border-color .15s,box-shadow .15s,transform .1s}
 button:hover{border-color:#b9d9d6;background:#f3fbfa}button:active{transform:scale(.97)}
-button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+button:focus-visible,select:focus-visible,input:focus-visible,#labHome:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
 button.active,.primary{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:0 4px 12px #0a8f8a33}
 button.active:hover,.primary:hover{background:var(--teal-d);border-color:var(--teal-d)}
 button:disabled{opacity:.35;cursor:default;transform:none}
@@ -22,8 +22,8 @@ header p{margin:2px 0 0;color:#9fb6c3;font-size:12px}
 #modes button span{opacity:.7;margin-right:3px}
 #modes button:hover{background:#ffffff14;color:#fff}
 #modes button.active{background:#fff;color:var(--navy)}
-.header-actions{display:flex;gap:6px;flex:none}
-.header-actions .icon{background:#ffffff12;border:0;color:#fff;min-width:42px;padding:6px 10px;font-size:16px}
+.header-actions{display:flex;flex-wrap:wrap;gap:6px;flex:none;max-width:100%}
+.header-actions .icon{display:inline-flex;align-items:center;justify-content:center;min-height:42px;border-radius:10px;text-decoration:none;white-space:nowrap;background:#ffffff12;border:0;color:#fff;min-width:42px;padding:6px 10px;font-size:16px}
 .header-actions .icon.wide{font-size:13px;font-weight:600}
 .header-actions .icon:hover{background:#ffffff26}
 .header-actions .icon[aria-pressed=true]{background:var(--orange);color:#fff}

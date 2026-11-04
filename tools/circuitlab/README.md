@@ -74,6 +74,10 @@ there are no new calculations or settings. Saved progress from the original
 
 ## Controls and help
 
+Use **← Go back** in the header to return to the Lab Home toolbox. Your board
+and progress stay saved. This also works offline in the full-site download;
+a standalone tool file does not include Lab Home.
+
 - Tap a library part, then tap the board; or drag it into place.
 - Tap a part and use Rotate; R also turns it by 90°. Wires remain attached.
 - Drag from one terminal dot to another, or tap both dots, to make a wire.

@@ -37,7 +37,9 @@ with sync_playwright() as p:
  page.locator('.personal-actions button').first.tap()
  assert page.locator('#viewer').is_visible()
  assert page.frame_locator('#toolFrame').locator('#answer').inner_text()=='Isolated tool running'
- page.locator('#closeViewer').click();assert not page.locator('#viewer').is_visible()
+ assert page.locator('#closeViewer').inner_text()=='← Go back'
+ page.locator('#closeViewer').tap();assert not page.locator('#viewer').is_visible()
+ assert page.locator('#toolFrame').get_attribute('srcdoc')==''
  page.locator('.personal-actions button').last.click();expect(page.locator('.personal-card')).to_have_count(0)
  page.reload();assert page.locator('.personal-card').count()==0
  # Unsupported files are rejected with useful feedback.
@@ -47,6 +49,22 @@ with sync_playwright() as p:
  for route in ['guides/getting-started.html','guides/classroom.html','guides/examples.html','guides/publishing.html']:
   response=page.goto(URL+'/'+route);assert response.ok;assert page.locator('h1').count()==1
  page.goto(URL);page.locator('.tool-card .primary').click();assert page.locator('#board').is_visible()
+ # A direct home link works even with no previous history, and keeps saved work.
+ for width in [375,960,1920]:
+  page.set_viewport_size({'width':width,'height':900})
+  back=page.locator('#labHome');assert back.inner_text()=='← Go back'
+  box=back.bounding_box();assert box['width']>=40 and box['height']>=40
+  assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+ saved=page.evaluate('JSON.stringify({state,classroom,mission})')
+ page.locator('#labHome').tap();page.wait_for_url(URL+'/index.html#library')
+ assert page.locator('#toolGrid').is_visible()
+ page.locator('.tool-card .primary').click()
+ page.wait_for_url(URL+'/tools/circuitlab/index.html')
+ page.wait_for_function('typeof state!=="undefined"')
+ assert page.evaluate('JSON.stringify({state,classroom,mission})')==saved
+ # The bundled download uses a different relative path back to the same home.
+ page.goto(URL+'/downloads/circuitlab.html');page.locator('#labHome').tap()
+ page.wait_for_url(URL+'/index.html#library')
  page.goto(URL);page.screenshot(path='/tmp/learning-lab-desktop.png',full_page=True)
  assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
  page.set_viewport_size({'width':390,'height':844});page.screenshot(path='/tmp/learning-lab-mobile.png',full_page=True)
