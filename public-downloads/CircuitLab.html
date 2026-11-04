@@ -422,6 +422,7 @@ let missionPassSignature='';
 function missionSignature(){return mission+':'+JSON.stringify(state);}
 function mayAdvanceMission(){return missionPhase==='complete'&&(mode==='missions'||mode==='challenge')&&missionPassSignature===missionSignature();}
 let classroom={names:['Pair 1','Pair 2'],scores:[0,0],completed:[],awarded:[]},remaining=120,timerOn=false;
+// Keep the storage version: questions 1–25 retain their indexes and meaning.
 const COURSE_VERSION='symbols-25-v1';
 const missions=[
  ['Teacher demo','Teacher: join the last wire to light the lamp.','A complete loop lets the lamp light.','teacher'],
@@ -448,7 +449,22 @@ const missions=[
  ['Switch and resistor','Make one loop with a switch, resistor and lamp.','Close the switch to complete the loop.','switchresistor'],
  ['Current meter','Add an ammeter to a loop with two lamps in series.','The ammeter belongs in the main path.','seriesammeter'],
  ['Two meters','Measure a lamp with an ammeter and a voltmeter.','A goes in series; V goes across the lamp.','twometers'],
- ['Final diagram','Build a lamp circuit with a switch and both meters.','Close the switch; put A in series and V across the lamp.','final']
+ ['Final diagram','Build a lamp circuit with a switch and both meters.','Close the switch; put A in series and V across the lamp.','final'],
+ ['Battery switch','Join a battery, a closed switch and a lamp in one loop.','A closed switch lets current pass through the lamp.','switch','battery'],
+ ['Battery break','Join a battery, an open switch and a lamp in one loop.','The open switch breaks the loop.','openswitch','battery'],
+ ['Battery resistor','Join a battery and a resistor in a loop.','The resistor symbol stays the same with a battery.','resistor','battery'],
+ ['Battery control','Join a battery, a variable resistor and a lamp in one loop.','The arrow marks the variable resistor.','variable','battery'],
+ ['Battery current','Put an ammeter in series with a battery and lamp.','Current passes through the ammeter and lamp.','ammeter','battery'],
+ ['Battery voltage','Put a voltmeter across a lamp powered by a battery.','Connect V to the two ends of the lamp.','voltmeter','battery'],
+ ['Battery thermistor','Join a battery, a thermistor and a lamp in one loop.','The thermistor symbol marks a temperature-sensitive resistor.','thermistor','battery'],
+ ['Battery LDR','Join a battery, an LDR and a lamp in one loop.','The arrows point towards the light-sensitive resistor.','ldr','battery'],
+ ['Supply resistor','Join a DC supply and a resistor in a loop.','The supply replaces the cell in this diagram.','resistor','supply'],
+ ['Supply current','Put an ammeter in series with a DC supply and lamp.','A goes in the same path as the lamp.','ammeter','supply'],
+ ['Supply voltage','Put a voltmeter across a lamp powered by a DC supply.','V connects across the lamp, on a separate branch.','voltmeter','supply'],
+ ['Supply capacitor','Join a DC supply, a capacitor and a resistor in one loop.','The capacitor blocks sustained current in steady DC.','capacitor','supply'],
+ ['Fuse resistor','Join a cell, a fuse and a resistor in one loop.','The fuse and resistor share one path.','fuseresistor'],
+ ['Series resistors','Connect a cell and two resistors in one loop.','Series resistors share the same path.','seriesresistors'],
+ ['Parallel resistors','Connect two resistors on separate branches across a cell.','Both branches connect to the same two points.','parallelresistors']
 ];
 const detectives=[['A meter blocks the way','The lamp stays dark. Check the meter.','A voltmeter has infinite resistance. Replace the series voltmeter with an ammeter.','series-meter'],['A dangerous shortcut','The ammeter is across the battery. Fix it.','Never place an ammeter directly across a source. Put it in series with the load.','short-meter'],['The backwards LED','The LED stays dark. Fix its direction.','An LED conducts only from anode to cathode. Reconnect its anode towards the source’s + terminal and its cathode towards −. Rotation changes the drawing, not the attached wire ends.','reverse-led']];
 function notify(text){$('#toast').textContent=text;$('#toast').classList.add('show');clearTimeout(notify.t);notify.t=setTimeout(()=>$('#toast').classList.remove('show'),2600);}
@@ -676,15 +692,15 @@ function solutionCircuit(index){
  const components=[],wires=[];let id=0;
  const add=(type,x,y)=>{const c={id:'guide'+(++id),type,x,y,rotation:0,value:PARTS[type].value,closed:type==='switch'};components.push(c);return c;};
  const join=(a,t,b,u,via=[])=>wires.push({id:'guide-wire'+wires.length,a:a.id+':'+t,b:b.id+':'+u,via});
- const kind=missions[index][3],source=add(kind==='supplylamp'?'supply':['batterylamp','serieslamps','parallellamps','junction','seriesammeter','final'].includes(kind)?'battery':'cell',200,380);source.rotation=90;
- const layouts={teacher:['lamp'],celllamp:['lamp'],batterylamp:['lamp'],switch:['switch','lamp'],openswitch:['switch','lamp'],resistor:['resistor'],resistorlamp:['resistor','lamp'],variable:['variable','lamp'],ammeter:['ammeter','lamp'],voltmeter:['lamp'],serieslamps:['lamp','lamp'],parallellamps:['lamp'],fuse:['fuse','lamp'],diode:['resistor','diode'],led:['resistor','led'],thermistor:['thermistor','lamp'],ldr:['ldr','lamp'],capacitor:['capacitor','resistor'],junction:['lamp'],wireloop:['lamp'],supplylamp:['lamp'],rotate:['lamp'],switchresistor:['switch','resistor','lamp'],seriesammeter:['ammeter','lamp','lamp'],twometers:['ammeter','lamp'],final:['switch','ammeter','lamp']};
+ const kind=missions[index][3],source=add(missions[index][4]||(kind==='supplylamp'?'supply':['batterylamp','serieslamps','parallellamps','junction','seriesammeter','final'].includes(kind)?'battery':'cell'),200,380);source.rotation=90;
+ const layouts={teacher:['lamp'],celllamp:['lamp'],batterylamp:['lamp'],switch:['switch','lamp'],openswitch:['switch','lamp'],resistor:['resistor'],resistorlamp:['resistor','lamp'],variable:['variable','lamp'],ammeter:['ammeter','lamp'],voltmeter:['lamp'],serieslamps:['lamp','lamp'],parallellamps:['lamp'],fuse:['fuse','lamp'],diode:['resistor','diode'],led:['resistor','led'],thermistor:['thermistor','lamp'],ldr:['ldr','lamp'],capacitor:['capacitor','resistor'],junction:['lamp'],wireloop:['lamp'],supplylamp:['lamp'],rotate:['lamp'],switchresistor:['switch','resistor','lamp'],seriesammeter:['ammeter','lamp','lamp'],twometers:['ammeter','lamp'],final:['switch','ammeter','lamp'],fuseresistor:['fuse','resistor'],seriesresistors:['resistor','resistor'],parallelresistors:['resistor']};
  const kinds=layouts[kind],chain=kinds.map((type,i)=>add(type,kinds.length===1?650:350+i*600/(kinds.length-1),180));
  if(kind==='openswitch')chain[0].closed=false;
  join(source,0,chain[0],0,[[200,180]]);
  for(let i=1;i<chain.length;i++)join(chain[i-1],1,chain[i],0);
  join(chain.at(-1),1,source,1,[[1080,180],[1080,620],[200,620]]);
- if(kind==='parallellamps'||kind==='junction'){
-  const second=add('lamp',650,420);
+ if(kind==='parallellamps'||kind==='junction'||kind==='parallelresistors'){
+  const second=add(kind==='parallelresistors'?'resistor':'lamp',650,420);
   if(kind==='junction'){
    const node=add('junction',470,180);wires.shift();join(source,0,node,0,[[200,180]]);join(node,1,chain[0],0);join(node,1,second,0,[[550,180],[550,420]]);
   }else join(chain[0],0,second,0,[[500,180],[500,420]]);
@@ -761,13 +777,15 @@ function checkMission(index){
  if(!result?.ok)return false;
  const cs=state.components,r=result.readings,n=result.nodes,kind=missions[index][3];
  const types=t=>cs.filter(c=>c.type===t),live=c=>Math.abs(r[c.id]?.current||0)>1e-7;
+ const requiredSource=missions[index][4];
+ if(requiredSource&&!types(requiredSource).some(c=>!result.active||live(c)))return false;
  if(kind==='openswitch'||kind==='capacitor'){
   const candidates=kind==='openswitch'?types('switch').filter(c=>!c.closed):types('capacitor');
   return !result.active&&candidates.some(c=>{
    const copy=JSON.parse(JSON.stringify(state)),part=copy.components.find(p=>p.id===c.id);
    if(kind==='openswitch')part.closed=true;else{part.type='resistor';part.value=20;}
    const test=CircuitSolver.solve(copy);
-   return test.ok&&Math.abs(test.readings[c.id]?.current||0)>1e-7&&copy.components.some(p=>p.type===(kind==='openswitch'?'lamp':'resistor')&&p.id!==c.id&&Math.abs(test.readings[p.id]?.current||0)>1e-7);
+   return test.ok&&(!requiredSource||copy.components.some(p=>p.type===requiredSource&&Math.abs(test.readings[p.id]?.current||0)>1e-7))&&Math.abs(test.readings[c.id]?.current||0)>1e-7&&copy.components.some(p=>p.type===(kind==='openswitch'?'lamp':'resistor')&&p.id!==c.id&&Math.abs(test.readings[p.id]?.current||0)>1e-7);
   });
  }
  if(!result.active)return false;
@@ -788,6 +806,9 @@ function checkMission(index){
   case'supplylamp':return withLamp('supply');
   case'switch':return withLamp('switch');
   case'resistor':return types('resistor').some(l=>live(l)&&cs.some(c=>['cell','battery','supply'].includes(c.type)&&seriesWith(c,l)));
+  case'fuseresistor':return types('fuse').some(f=>types('resistor').some(c=>seriesWith(f,c)));
+  case'seriesresistors':return types('resistor').some(a=>types('resistor').some(b=>a!==b&&!parallel(a,b)&&seriesWith(a,b)));
+  case'parallelresistors':return types('resistor').some(a=>live(a)&&types('resistor').some(b=>a!==b&&live(b)&&parallel(a,b)));
   case'resistorlamp':return withLamp('resistor');
   case'variable':return withLamp('variable');
   case'ammeter':return amp;

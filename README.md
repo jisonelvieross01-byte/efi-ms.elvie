@@ -63,7 +63,7 @@ Browser tests need Python Playwright and system Chromium (`/usr/bin/chromium`).
 These are development dependencies only. They start their own temporary local
 servers. Static checks ensure all HTML links resolve and downloads are bundled.
 Numerical tests exercise 17 circuit cases; integration tests cover touchscreen
-controls, all 25 symbol-question validators, the catalog, imports, downloads and layouts.
+controls, all 40 symbol-question validators, the catalog, imports, downloads and layouts.
 
 CircuitLab’s header and the personal tool viewer include **← Go back** to return
 to Lab Home. The full-site download supports this navigation offline; a standalone
@@ -81,7 +81,7 @@ library origin and restrict external resource loading; only import trusted files
 CircuitLab uses an explicitly labelled DC steady-state model. See the in-app
 model panel and `tools/circuitlab/README.md` for its scientific limitations.
 
-CircuitLab has one teacher demonstration and 24 simple student questions, two-minute
+CircuitLab has one teacher demonstration and 39 simple student questions, two-minute
 attempts and a verified-answer achievement popup. No dances, penalties, numerical
 adjustments or npm packages are needed.
 
