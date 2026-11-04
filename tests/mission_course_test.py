@@ -1,5 +1,5 @@
 from answer_gate_helpers import unlock_help
-"""One teacher demonstration plus 24 simple, topologically validated symbol tasks."""
+"""One teacher demonstration plus 39 simple, topologically validated symbol tasks."""
 from pathlib import Path
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
 from functools import partial
@@ -14,17 +14,17 @@ with sync_playwright() as p:
  page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda r:requests.append(r.url))
  page.route('**/*',lambda r:r.continue_() if r.request.url.startswith('http://127.0.0.1:') else r.abort())
  page.goto(f'http://127.0.0.1:{server.server_port}/tools/circuitlab/index.html')
- assert page.evaluate('missions.length')==25
+ assert page.evaluate('missions.length')==40
  assert 'Teacher demo' in page.locator('#activity').inner_text()
  assert page.locator('#missionClock').inner_text()=='02:00'
  assert page.locator('#parts button').count()==17
  assert page.evaluate('state.components.length===2 && state.wires.length===1')
  assert page.locator('#modes button').count()==1
- for i in range(25):
+ for i in range(40):
   result=page.evaluate('''i=>{const old=state,previous=result;try{state=solutionCircuit(i);result=CircuitSolver.solve(state);const valid=checkMission(i),active=result.active;state.wires.shift();result=CircuitSolver.solve(state);return {valid,active,broken:checkMission(i)};}finally{state=old;result=previous;}}''',i)
   assert result['valid'],(i,result)
   assert not result['broken'],(i,result)
-  assert result['active']==(i not in [4,17]),(i,result)
+  assert result['active']==(i not in [4,17,26,36]),(i,result)
   page.evaluate('(i)=>{mission=i;activity()}',i)
   before=page.evaluate('JSON.stringify({state,classroom,history,future})')
   unlock_help(page)
@@ -32,6 +32,13 @@ with sync_playwright() as p:
   assert page.locator('#answerDrawing [data-guide-part]').count()==page.evaluate('solutionCircuit(mission).components.length')
   assert page.evaluate('JSON.stringify({state,classroom,history,future})')==before
   page.locator('#closeAnswer').click()
+ # New source-specific tasks reject a cell substituted for the requested source,
+ # even if a disconnected copy of the requested source is left on the board.
+ for i in range(25,37):
+  assert page.evaluate('''i=>{const old=state,previous=result;try{state=solutionCircuit(i);const source=state.components[0],required=source.type;source.type='cell';source.value=PARTS.cell.value;state.components.push({...source,id:'unused-source',type:required,value:PARTS[required].value});result=CircuitSolver.solve(state);return !checkMission(i);}finally{state=old;result=previous;}}''',i),i
+ # A different connection pattern must not pass just because it uses two resistors.
+ for question,other in [(38,39),(39,38),(37,38)]:
+  assert page.evaluate('''([question,other])=>{const old=state,previous=result;try{state=solutionCircuit(other);result=CircuitSolver.solve(state);return !checkMission(question);}finally{state=old;result=previous;}}''',[question,other])
  # No numerical targets in questions, no settings sliders for students.
  assert page.evaluate('missions.every(m=>!/[0-9].*(Ω|mA| A| V)/.test(m[1]))')
  for type in ['cell','battery','resistor','variable','thermistor','ldr']:
@@ -44,7 +51,7 @@ with sync_playwright() as p:
  assert page.evaluate('typeof CircuitDance')=='undefined'
  assert not list((ROOT/'dist').rglob('*.glb')) and not list((ROOT/'dist').rglob('*.bvh'))
  for width in [375,960,1920]:
-  page.set_viewport_size({'width':width,'height':900});page.evaluate('mission=24;activity()')
+  page.set_viewport_size({'width':width,'height':900});page.evaluate('mission=39;activity()')
   unlock_help(page)
   page.locator('#showAnswer').click();assert page.locator('#answerDialog').is_visible()
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
@@ -53,4 +60,4 @@ with sync_playwright() as p:
  assert all('127.0.0.1' in u or not u.startswith('http') for u in requests)
  browser.close()
 server.shutdown()
-print('PASS: 25 simple questions, teacher demo, 25 correct/25 broken diagrams, open-switch/capacitor cases, instant answers, no sliders/number targets/dances, and 3 layouts.')
+print('PASS: 40 simple questions, teacher demo, 40 correct/40 broken diagrams, open-switch/capacitor cases, instant answers, no sliders/number targets/dances, and 3 layouts.')
