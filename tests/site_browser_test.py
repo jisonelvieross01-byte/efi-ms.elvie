@@ -15,11 +15,11 @@ with sync_playwright() as p:
  context.route('**/*',lambda r:r.continue_() if r.request.url.startswith(URL) else r.abort())
  page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  auto_dismiss_completion(page)
- page.goto(URL);assert page.locator('.tool-card').count()==2
- assert page.locator('#toolCount').inner_text()=='2 classroom tools'
+ page.goto(URL);assert page.locator('.tool-card').count()==3
+ assert page.locator('#toolCount').inner_text()=='3 classroom tools'
  page.locator('#search').fill('circuit');assert page.locator('.tool-card').count()==1
  page.locator('#search').fill('no such tool');assert page.locator('#noResults').is_visible()
- page.locator('#search').fill('');page.locator('[data-category="Physics"]').tap();assert page.locator('.tool-card').count()==2
+ page.locator('#search').fill('');page.locator('[data-category="Physics"]').tap();assert page.locator('.tool-card').count()==3
  page.locator('[data-category="All"]').tap()
  # A real standalone HTML download works, without any JS/CSS sidecar requests.
  with page.expect_download() as download:page.locator('.download[href="downloads/circuitlab.html"]').click()
@@ -70,7 +70,7 @@ with sync_playwright() as p:
  page.set_viewport_size({'width':390,'height':844});page.screenshot(path='/tmp/learning-lab-mobile.png',full_page=True)
  assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
  page.locator('#search').fill('lamp');assert page.locator('.tool-card').count()==0
- page.locator('#search').fill('physics');assert page.locator('.tool-card').count()==2
+ page.locator('#search').fill('physics');assert page.locator('.tool-card').count()==3
  # Space Explorers is searchable, launches, and downloads as a standalone game.
  page.locator('#search').fill('tides');assert page.locator('.tool-card').count()==1
  page.locator('.tool-card .primary').click()

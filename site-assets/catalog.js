@@ -1,4 +1,4 @@
-/* Public catalog. Add tools using scripts/add_tool.py. */
+/* Public classroom tool catalog. */
 window.TOOL_CATALOG = [
   {
     "id": "circuitlab",
@@ -35,5 +35,22 @@ window.TOOL_CATALOG = [
     ],
     "version": "1.2.0",
     "accent": "blue"
+  },
+  {
+    "id": "physics-playground",
+    "title": "Physics 7: Physics Playground",
+    "subtitle": "Gamified Experiments",
+    "category": "Physics",
+    "level": "Cambridge Grade 7",
+    "description": "Predict, test and explain forces, speed and moments in 15 hands-on experiments for a 50\u201360-minute smart TV review.",
+    "path": "tools/physics-playground/index.html",
+    "tags": [
+      "Forces",
+      "Speed",
+      "Moments",
+      "Touchscreen"
+    ],
+    "version": "1.0.0",
+    "accent": "teal"
   }
 ];
