@@ -27,7 +27,9 @@ with sync_playwright() as pw:
  page.goto(URL);page.select_option('#teamCount','8')
  for i in range(8):page.locator('#names input').nth(i).fill(f'Astronaut Crew {i+1}')
  fits(page,'#setup .modal');fits(page,'.briefing-content');fits(page,'.briefing-art')
- page.locator('#startBtn').tap();assert page.locator('.team').count()==8
+ page.locator('#startBtn').tap();assert page.locator('.team,#scoreboard,#soundBtn,#awardBtn,#zeroBtn').count()==0
+ assert page.locator('#turnLabel').inner_text()=='ON DECK: Astronaut Crew 1'
+ page.wait_for_function('audioCtx && audioCtx.state==="running"')
  for width,height in [(1920,1080),(1280,720),(1366,768),(1024,768),(3840,2160)]:
   page.set_viewport_size({'width':width,'height':height});page.evaluate('fitStage()')
   assert page.evaluate('document.documentElement.scrollHeight===innerHeight')
@@ -43,12 +45,12 @@ with sync_playwright() as pw:
  page.locator('[data-close=guide]').tap()
  # Inspect every question and solution for overflowing or clipped controls.
  for i in range(30):
-  page.evaluate('(i)=>{S.i=i;S.checked=false;S.scored=false;S.answers=[];S.pick=null;render()}',i)
+  page.evaluate('(i)=>{S.i=i;S.checked=false;S.answers=[];S.pick=null;render()}',i)
   fits(page,'#simulation');fits(page,'.question')
   page.evaluate('()=>{let q=Q[S.i];S.pick=q.options?q.correct:null;S.answers=q.options?[]:q.correct.map(String);document.querySelector("#checkBtn").click()}')
   fits(page,'#simulation');fits(page,'.question')
  # Planet distance dragging, race preset and pause.
- page.evaluate('()=>{S.i=5;S.checked=false;S.scored=false;S.animate=false;render()}')
+ page.evaluate('()=>{S.i=5;S.checked=false;S.animate=false;render()}')
  point=page.locator('#planetA').evaluate('el=>{let p=el.ownerSVGElement.createSVGPoint();let q=p.matrixTransform(el.transform.baseVal.consolidate().matrix);return {x:q.x,y:q.y}}')
  drag(page,'#orbitSVG',(point['x'],point['y']),(655,220))
  assert page.evaluate('S.a')==2.5
@@ -72,9 +74,9 @@ with sync_playwright() as pw:
  distance=page.evaluate('ship.distance');box=page.locator('#brakeBtn').bounding_box()
  page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2);page.mouse.down();page.wait_for_timeout(800);page.mouse.up()
  assert page.evaluate('ship.v')<0 and page.evaluate('ship.distance')>=distance
- # A complete game through actual choices, number-pad buttons, teacher checking and NEXT.
+ # Complete all challenges with external whiteboard scoring and automatic team rotation.
  key=[[49],[8],[124],0,2,1,0,1,1,0,0,1,1,[4.8],[3],[98],1,1,[5],0,[4.8],[49.6],0,1,[4.8],0,0,[2],1,[49,8]]
- page.evaluate('()=>{S.i=0;S.done=false;S.checked=false;S.scored=false;S.records=[];S.scores=S.names.map(()=>0);S.team=0;S.answers=[];S.pick=null;render()}')
+ page.evaluate('()=>{S.i=0;S.done=false;S.checked=false;S.records=[];S.team=0;S.answers=[];S.pick=null;render()}')
  for i,answer in enumerate(key):
   assert page.locator('#nextBtn').is_disabled()
   if isinstance(answer,list):
@@ -84,14 +86,15 @@ with sync_playwright() as pw:
     page.locator('#keyDone').tap()
   else:page.locator('#answers .options button').nth(answer).tap()
   page.locator('#checkBtn').tap();assert page.evaluate('correct()')
-  fits(page,'.question');page.locator('#awardBtn').tap()
-  page.evaluate('document.querySelector("#awardBtn").click()')
+  fits(page,'.question')
+  page.evaluate('document.querySelector("#checkBtn").click()')
   assert page.evaluate('S.records.length')==i+1
   page.locator('#nextBtn').tap()
- assert page.evaluate('S.done&&S.records.length===30&&S.scores.reduce((a,b)=>a+b,0)===40')
+  if i<29:assert page.locator('#turnLabel').inner_text()==f'ON DECK: Astronaut Crew {(i+1)%8+1}'
+ assert page.evaluate("S.done&&S.records.length===30&&!Object.hasOwn(S,'scores')")
  fits(page,'#finish');page.locator('#endGuide').tap();fits(page,'#guide .modal');page.locator('[data-close=guide]').tap()
  page.reload();fits(page,'#setup .modal');page.locator('#resumeBtn').tap();assert page.locator('#finish').is_visible()
  assert not errors,errors
  browser.close()
 server.shutdown()
-print('PASS: all 30 challenges and solutions fit; 8-team overlays; five display sizes; gravity/orbit/tide dragging; drop/race/formation/thrust controls; complete 40-point game; saved resume; no script errors or external requests.')
+print('PASS: all 30 challenges and solutions fit; 8-team overlays; five display sizes; gravity/orbit/tide dragging; drop/race/formation/thrust controls; complete no-score game, automatic sound, team rotation; saved resume; no script errors or external requests.')
