@@ -1,6 +1,6 @@
-# Elvie Learning Lab
+# EFI Academy Physics Lab
 
-A static website for HTML classroom tools. Includes the full CircuitLab application,
+Physics classroom tools for EFI Academy, taught by Ms. Elvie. Includes the full CircuitLab application,
 HTML teaching guides, a searchable catalog, offline HTML downloads, and a personal
 browser library for importing self-contained tools.
 
