@@ -23,7 +23,7 @@ window.TOOL_CATALOG = [
     "subtitle": "Mission Control",
     "category": "Physics",
     "level": "Grade 6",
-    "description": "Four missions covering gravity, mass, orbits, Solar System formation and tides. A 50–60 minute touchscreen team game with 30 challenges and teacher-controlled scoring.",
+    "description": "Explore gravity, orbits and tides in a visual Grade 6 team game. 30 challenges, automatic sounds and whiteboard scoring.",
     "path": "tools/space-explorers/index.html",
     "tags": [
       "Space",
@@ -33,7 +33,7 @@ window.TOOL_CATALOG = [
       "Teams",
       "Touchscreen"
     ],
-    "version": "1.0.0",
+    "version": "1.2.0",
     "accent": "blue"
   }
 ];
