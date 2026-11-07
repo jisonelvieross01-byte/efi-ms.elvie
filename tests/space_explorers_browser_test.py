@@ -41,6 +41,7 @@ with sync_playwright() as pw:
  page.locator('#dropBtn').tap();assert '2.50 s' in page.locator('#dropInfo').text_content()
  page.locator('#teacherBtn').tap();fits(page,'#teacher .modal');page.locator('[data-close=teacher]').tap()
  page.locator('#guideBtn').tap()
+ assert 'Earth: 10 N/kg' in page.locator('#guidePage').inner_text()
  for i in range(4):page.locator('[data-guide]').nth(i).tap();fits(page,'#guide .modal')
  page.locator('[data-close=guide]').tap()
  # Inspect every question and solution for overflowing or clipped controls.
@@ -75,7 +76,7 @@ with sync_playwright() as pw:
  page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2);page.mouse.down();page.wait_for_timeout(800);page.mouse.up()
  assert page.evaluate('ship.v')<0 and page.evaluate('ship.distance')>=distance
  # Complete all challenges with external whiteboard scoring and automatic team rotation.
- key=[[49],[8],[124],0,2,1,0,1,1,0,0,1,1,[4.8],[3],[98],1,1,[5],0,[4.8],[49.6],0,1,[4.8],0,0,[2],1,[49,8]]
+ key=[[50],[8],[124],0,2,1,0,1,1,0,0,1,1,[4.8],[3],[100],1,1,[5],0,[4.8],[49.6],0,1,[4.8],0,0,[2],1,[50,8]]
  page.evaluate('()=>{S.i=0;S.done=false;S.checked=false;S.records=[];S.team=0;S.answers=[];S.pick=null;render()}')
  for i,answer in enumerate(key):
   assert page.locator('#nextBtn').is_disabled()
