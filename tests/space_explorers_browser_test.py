@@ -69,6 +69,9 @@ with sync_playwright() as pw:
  page.mouse.down();page.wait_for_timeout(350);page.mouse.up()
  speed=page.evaluate('ship.v');assert speed>0
  page.wait_for_timeout(200);assert abs(page.evaluate('ship.v')-speed)<0.001
+ distance=page.evaluate('ship.distance');box=page.locator('#brakeBtn').bounding_box()
+ page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2);page.mouse.down();page.wait_for_timeout(800);page.mouse.up()
+ assert page.evaluate('ship.v')<0 and page.evaluate('ship.distance')>=distance
  # A complete game through actual choices, number-pad buttons, teacher checking and NEXT.
  key=[[49],[8],[124],0,2,1,0,1,1,0,0,1,1,[4.8],[3],[98],1,1,[5],0,[4.8],[49.6],0,1,[4.8],0,0,[2],1,[49,8]]
  page.evaluate('()=>{S.i=0;S.done=false;S.checked=false;S.scored=false;S.records=[];S.scores=S.names.map(()=>0);S.team=0;S.answers=[];S.pick=null;render()}')
