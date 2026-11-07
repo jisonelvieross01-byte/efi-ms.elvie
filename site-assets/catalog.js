@@ -52,5 +52,22 @@ window.TOOL_CATALOG = [
     ],
     "version": "1.0.0",
     "accent": "teal"
+  },
+  {
+    "id": "float-sink",
+    "title": "Float or Sink?",
+    "subtitle": "The Energy Laboratory",
+    "category": "Physics",
+    "level": "Grade 8",
+    "description": "Four visual investigations: density, water displacement, particle motion and energy conservation. Touch-friendly team experiments with offline download.",
+    "path": "tools/float-sink/index.html",
+    "tags": [
+      "Density",
+      "Energy",
+      "Touchscreen",
+      "Simulation"
+    ],
+    "version": "1.0.0",
+    "accent": "teal"
   }
 ];
