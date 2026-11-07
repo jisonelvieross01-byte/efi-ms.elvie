@@ -78,7 +78,8 @@ with sync_playwright() as p:
  page.locator('#startBtn').tap()
  assert page.locator('#qTitle').inner_text()=='Earth test'
  assert page.evaluate('Q.length')==30
- assert page.locator('.team').count()==6
+ assert page.locator('#turnLabel').inner_text()=='ON DECK: Team 1'
+ assert page.locator('#scoreboard,#soundBtn').count()==0
  page.goto(URL)
  with page.expect_download() as download:
   page.locator('.download[href="downloads/space-explorers.html"]').click()
