@@ -15,14 +15,14 @@ with sync_playwright() as p:
  context.route('**/*',lambda r:r.continue_() if r.request.url.startswith(URL) else r.abort())
  page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  auto_dismiss_completion(page)
- page.goto(URL);assert page.locator('.tool-card').count()==1
- assert page.locator('#toolCount').inner_text()=='1 classroom tool'
+ page.goto(URL);assert page.locator('.tool-card').count()==2
+ assert page.locator('#toolCount').inner_text()=='2 classroom tools'
  page.locator('#search').fill('circuit');assert page.locator('.tool-card').count()==1
  page.locator('#search').fill('no such tool');assert page.locator('#noResults').is_visible()
- page.locator('#search').fill('');page.locator('[data-category="Physics"]').tap();assert page.locator('.tool-card').count()==1
+ page.locator('#search').fill('');page.locator('[data-category="Physics"]').tap();assert page.locator('.tool-card').count()==2
  page.locator('[data-category="All"]').tap()
  # A real standalone HTML download works, without any JS/CSS sidecar requests.
- with page.expect_download() as download:page.locator('.download').click()
+ with page.expect_download() as download:page.locator('.download[href="downloads/circuitlab.html"]').click()
  downloaded=Path('/tmp/circuitlab-standalone-test.html');download.value.save_as(downloaded)
  assert 'CircuitSolver' in downloaded.read_text()
  page.goto(URL+'/downloads/circuitlab.html');page.locator('#missionStart').click();page.select_option('#examples','parallel')
@@ -48,7 +48,7 @@ with sync_playwright() as p:
  # Guides and launched app resolve from the built site.
  for route in ['guides/getting-started.html','guides/classroom.html','guides/examples.html','guides/publishing.html']:
   response=page.goto(URL+'/'+route);assert response.ok;assert page.locator('h1').count()==1
- page.goto(URL);page.locator('.tool-card .primary').click();assert page.locator('#board').is_visible()
+ page.goto(URL);page.locator('.tool-card .primary[href="tools/circuitlab/index.html"]').click();assert page.locator('#board').is_visible()
  # A direct home link works even with no previous history, and keeps saved work.
  for width in [375,960,1920]:
   page.set_viewport_size({'width':width,'height':900})
@@ -58,7 +58,7 @@ with sync_playwright() as p:
  saved=page.evaluate('JSON.stringify({state,classroom,mission})')
  page.locator('#labHome').tap();page.wait_for_url(URL+'/index.html#library')
  assert page.locator('#toolGrid').is_visible()
- page.locator('.tool-card .primary').click()
+ page.locator('.tool-card .primary[href="tools/circuitlab/index.html"]').click()
  page.wait_for_url(URL+'/tools/circuitlab/index.html')
  page.wait_for_function('typeof state!=="undefined"')
  assert page.evaluate('JSON.stringify({state,classroom,mission})')==saved
@@ -70,7 +70,21 @@ with sync_playwright() as p:
  page.set_viewport_size({'width':390,'height':844});page.screenshot(path='/tmp/learning-lab-mobile.png',full_page=True)
  assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
  page.locator('#search').fill('lamp');assert page.locator('.tool-card').count()==0
- page.locator('#search').fill('physics');assert page.locator('.tool-card').count()==1
+ page.locator('#search').fill('physics');assert page.locator('.tool-card').count()==2
+ # Space Explorers is searchable, launches, and downloads as a standalone game.
+ page.locator('#search').fill('tides');assert page.locator('.tool-card').count()==1
+ page.locator('.tool-card .primary').click()
+ page.wait_for_url(URL+'/tools/space-explorers/index.html')
+ page.locator('#startBtn').tap()
+ assert page.locator('#qTitle').inner_text()=='Earth test'
+ assert page.evaluate('Q.length')==30
+ assert page.locator('.team').count()==6
+ page.goto(URL)
+ with page.expect_download() as download:
+  page.locator('.download[href="downloads/space-explorers.html"]').click()
+ space_download=Path('/tmp/space-explorers-standalone-test.html');download.value.save_as(space_download)
+ assert '<title>PHYSICS 6: SPACE EXPLORERS' in space_download.read_text()
+ page.goto(URL+'/downloads/space-explorers.html');assert page.locator('#setup').is_visible()
  assert not errors,errors
  browser.close()
 server.shutdown()
