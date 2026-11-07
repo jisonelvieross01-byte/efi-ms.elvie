@@ -1,0 +1,72 @@
+name: Verify school branding
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+permissions:
+  contents: write
+jobs:
+  verify:
+    if: github.head_ref == 'efi-academy-physics-branding' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efi-academy-physics-branding
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Solver tests
+        run: npm test
+      - name: Build and static checks
+        run: |
+          python scripts/build_site.py
+          python tests/site_test.py
+          python tests/tool_pipeline_test.py
+      - name: Install browser test dependencies
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+          python - <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          with sync_playwright() as p:
+              Path('/tmp/branding-chromium-path').write_text(p.chromium.executable_path)
+          PY
+          sudo ln -sf "$(cat /tmp/branding-chromium-path)" /usr/bin/chromium
+      - name: Browser checks
+        run: |
+          for test in tests/*_test.py; do
+            case "$test" in
+              tests/site_test.py|tests/tool_pipeline_test.py) continue ;;
+            esac
+            python "$test"
+          done
+      - name: Refresh the committed site download
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile
+          root = Path('dist')
+          target = Path('public-downloads/Elvie-Learning-Lab.zip')
+          with zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED) as z:
+              for p in sorted(root.rglob('*')):
+                  if p.is_file():
+                      z.write(p, 'EFI Academy Physics Lab/' + str(p.relative_to(root)))
+          with zipfile.ZipFile(target) as z:
+              for p in root.rglob('*'):
+                  if p.is_file():
+                      assert z.read('EFI Academy Physics Lab/' + str(p.relative_to(root))) == p.read_bytes(), p
+          print('PASS: every site ZIP entry matches the updated build output')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public-downloads/Elvie-Learning-Lab.zip
+          if ! git diff --cached --quiet; then
+            git commit -m "Refresh EFI Academy site download after branding checks"
+            git push origin HEAD:efi-academy-physics-branding
+          fi
