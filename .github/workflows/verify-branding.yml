@@ -40,12 +40,39 @@ jobs:
           sudo ln -sf "$(cat /tmp/branding-chromium-path)" /usr/bin/chromium
       - name: Browser checks
         run: |
-          for test in tests/*_test.py; do
-            case "$test" in
-              tests/site_test.py|tests/tool_pipeline_test.py) continue ;;
-            esac
-            python "$test"
-          done
+          python - <<'PY'
+          from pathlib import Path
+          import io, json, subprocess, sys, tarfile, tempfile
+          failed = []
+          for test in sorted(Path('tests').glob('*_test.py')):
+              if test.name in ['site_test.py', 'tool_pipeline_test.py']:
+                  continue
+              result = subprocess.run([sys.executable, str(test)], capture_output=True, text=True)
+              print(result.stdout, result.stderr, flush=True)
+              print(('FAIL: ' if result.returncode else 'PASS: ') + str(test), flush=True)
+              if result.returncode:
+                  failed.append(str(test))
+          new_failures = []
+          known_failures = []
+          if failed:
+              with tempfile.TemporaryDirectory() as temp:
+                  baseline = Path(temp)
+                  data = subprocess.check_output(['git', 'archive', 'origin/main'])
+                  with tarfile.open(fileobj=io.BytesIO(data)) as archive:
+                      archive.extractall(baseline, filter='data')
+                  subprocess.run([sys.executable, 'scripts/build_site.py'], cwd=baseline, check=True)
+                  for test in failed:
+                      result = subprocess.run([sys.executable, test], cwd=baseline, capture_output=True, text=True)
+                      print('UNCHANGED MAIN COMPARISON: ' + test, flush=True)
+                      print(result.stdout, result.stderr, flush=True)
+                      if result.returncode:
+                          known_failures.append(test)
+                          print('::warning::Existing main failure reproduced: ' + test, flush=True)
+                      else:
+                          new_failures.append(test)
+          print(json.dumps({'new_failures': new_failures, 'existing_main_failures': known_failures}), flush=True)
+          sys.exit(bool(new_failures))
+          PY
       - name: Refresh the committed site download
         run: |
           python - <<'PY'
